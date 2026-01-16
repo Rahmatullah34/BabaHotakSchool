@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>د ښوونکو لیست ازموینه</title>
+  <style>
+    body { font-family:'Segoe UI', Tahoma; background:#f0f4f8; padding:20px; direction:rtl; }
+    .container { max-width:600px; margin:auto; background:white; padding:20px; border-radius:15px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+    h2 { text-align:center; color:#3498db; margin-bottom:20px; }
+    .teacher-name { padding:10px; border-bottom:1px solid #eee; font-size:18px; color:#2c3e50; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>د ښوونکو لیست</h2>
+  <div id="teacherList">درلودونکي معلومات...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  db.collection("babaTeachers").get().then(snapshot => {
+    const list = document.getElementById('teacherList');
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+      const t = doc.data();
+      const div = document.createElement('div');
+      div.className = "teacher-name";
+      div.innerText = t.name;
+      list.appendChild(div);
+    });
+  }).catch(error => {
+    document.getElementById('teacherList').innerText = "❌ خطا: " + error.message;
+  });
+</script>
+
+</body>
+</html>

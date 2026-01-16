@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ښوونکي ډشبورډ - بابا هوتک نمبر ۲</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary: #4A90E2; --bg: #f8fafc; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; color: var(--text); }
+        
+        .top-card { background: white; padding: 20px; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .p-info { display: flex; align-items: center; gap: 15px; }
+        .p-info img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; }
+        .logout-btn { background: #ffeded; color: #e74c3c; border: none; padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .s-card { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-bottom: 4px solid var(--primary); cursor: pointer; }
+        .s-card h3 { margin: 0; font-size: 22px; color: #333; }
+        .s-card p { margin: 5px 0 0; font-size: 11px; color: #7f8c8d; font-weight: bold; }
+
+        /* د مینوګانو شبکه - په اتومات ډول عیارېږي */
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+        .m-btn { background: white; padding: 18px 5px; border-radius: 22px; text-align: center; text-decoration: none; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+        .m-btn i { font-size: 28px; font-style: normal; }
+        .m-btn span { font-size: 12px; font-weight: 600; }
+        
+        .chat-notification { position: absolute; top: 5px; left: 5px; background: #e74c3c; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; display: none; }
+
+        .my-commercial-banner {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-weight: bold;
+            color: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #e67e22;
+        }
+        .ad-tag { font-size: 10px; background: black; color: white; display: inline-block; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+
+        .principal-message-box {
+            background: #fff;
+            border-right: 6px solid #27ae60;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .p-header { color: #27ae60; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="top-card">
+    <div class="p-info">
+        <img id="teacherPhoto" src="https://via.placeholder.com/70" alt="P">
+        <div>
+            <h3 id="teacherName" style="margin:0; font-size: 18px;">...</h3>
+            <span id="teacherRole" style="font-size:12px; color:#7f8c8d;">صنف: په انتظار...</span>
+        </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">وتل ⬅️</button>
+</div>
+
+<div class="stats-row">
+    <div class="s-card" onclick="location.href='my_students.html'">
+        <h3 id="studentCount">۰</h3>
+        <p>شاګردان</p>
+    </div>
+    <div class="s-card"><h3>۴</h3><p>ساعتونه</p></div>
+    <div class="s-card"><h3 id="attRate">۹۵٪</h3><p>حاضري</p></div>
+</div>
+
+<div class="menu-grid">
+    <a href="teaching_plan.html" class="m-btn"><i>📅</i><span>درسي پلان</span></a>
+    <a href="annual_plan.html" class="m-btn"><i>📊</i><span>کلني پلان</span></a>
+    <a href="submit_marks.html" class="m-btn"><i>📝</i><span>نمرې رسول</span></a>
+    <a href="results.html" class="m-btn"><i>📜</i><span>نتایج</span></a>
+    <a href="take_attendance.html" class="m-btn" style="border: 2px solid var(--primary);"><i>📝</i><span>حاضري</span></a>
+    
+    <a href="teacher_chat.html" class="m-btn">
+        <span id="chatNotification" class="chat-notification">۰</span>
+        <i>💬</i>
+        <span>چټ</span>
+    </a>
+    
+    <a href="student_report_card.html" class="m-btn"><i>📜</i><span>اطلاعنامه</span></a>
+    
+    <a href="homework.html" class="m-btn"><i>📚</i><span>کورنۍ دنده</span></a>
+    <a href="leave_request.html" class="m-btn"><i>✉️</i><span>رخصتي</span></a>
+    <a href="profile.html" class="m-btn"><i>👤</i><span>پروفایل</span></a>
+</div>
+
+<div class="my-commercial-banner" id="commercialAdBox">
+    <div class="ad-tag">سپانسر شوی</div>
+    <p id="ad-display-text">د بابا هوتک لیسې اپلیکیشن ته ښه راغلاست!</p>
+</div>
+
+<div class="principal-message-box" id="principalNoticeBox">
+    <div class="p-header">📢 د مدیر صاحب ځانګړی پیغام</div>
+    <p id="p-display-text" style="margin:0; font-size:13px; line-height:1.6;">په انتظار...</p>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    window.onload = function() {
+        const teacherId = localStorage.getItem('userId');
+        
+        if (!teacherId) { window.location.replace('login.html'); return; }
+
+        db.collection("babaTeachers").doc(teacherId).get().then(doc => {
+            if(doc.exists) {
+                const d = doc.data();
+                const grade = d.grade || "";
+                const section = d.section || "";
+                
+                document.getElementById('teacherName').innerText = "استاد " + d.name;
+                document.getElementById('teacherRole').innerText = "اروند صنف: " + grade + " (" + section + ")";
+                if (d.photo) document.getElementById('teacherPhoto').src = d.photo;
+
+                const cleanSec = section.split(' ')[0];
+                db.collection("babaStudents")
+                  .where("grade", "==", grade)
+                  .onSnapshot(snap => {
+                      const count = snap.docs.filter(sDoc => {
+                          const sData = sDoc.data();
+                          return sData.section === cleanSec || sData.section === section;
+                      }).length;
+                      document.getElementById('studentCount').innerText = count;
+                  });
+            }
+        });
+
+        loadSystemNotices(); 
+        checkMessages(teacherId);
+    }
+
+    function loadSystemNotices() {
+        db.collection("systemSettings").doc("commercialAd").onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('ad-display-text').innerText = doc.data().text;
+            }
+        });
+
+        db.collection("systemSettings").doc("principalNotice").onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('p-display-text').innerText = doc.data().message;
+            }
+        });
+    }
+
+    function checkMessages(id) {
+        db.collection("schoolChat")
+          .where("receiverId", "==", id)
+          .where("status", "==", "unread")
+          .onSnapshot(snap => {
+              const note = document.getElementById('chatNotification');
+              if (snap.size > 0) {
+                  note.style.display = 'block';
+                  note.innerText = snap.size;
+              } else {
+                  note.style.display = 'none';
+              }
+          });
+    }
+
+    function logout() { 
+        if(confirm("ایا غواړئ بهر شئ؟")) {
+            localStorage.clear(); 
+            window.location.replace('login.html'); 
+        }
+    }
+</script>
+</body>
+</html>

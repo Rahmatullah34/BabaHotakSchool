@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د فایربیس ډیټابیس ډیټا چټیمیل - بابا هوتک لیسه</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: var(--dark-text);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--light-bg);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--dark-text);
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .tab-btn:hover {
+            background: #e3f2fd;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .data-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .data-section.active {
+            display: block;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .data-header {
+            background: var(--light-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-header h3 {
+            color: var(--dark-text);
+            font-size: 18px;
+        }
+
+        .count-badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .data-content {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--light-bg);
+            padding: 12px;
+            text-align: right;
+            color: var(--dark-text);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .student-item, .teacher-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .student-item:last-child, .teacher-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .info-item {
+            background: var(--light-bg);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: var(--dark-text);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--danger-color);
+            background: #fde8e8;
+            border-radius: 8px;
+            margin: 10px;
+        }
+
+        .back-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .data-content {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 د بابا هوتک لیسې فایربیس ډیټابیس</h1>
+            <p>ټوله ذخیره شوې ډیټا دې پاڼې کې وګورئ</p>
+        </div>
+
+        <div class="stats-bar" id="statsBar">
+            <!-- احصایې دلته به پوره شي -->
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="students">👥 زده کوونکي</button>
+            <button class="tab-btn" data-tab="teachers">👨‍🏫 ښوونکي</button>
+            <button class="tab-btn" data-tab="attendance">📝 حاضري</button>
+            <button class="tab-btn" data-tab="finance">💰 مالیات</button>
+            <button class="tab-btn" data-tab="results">📊 نتایج</button>
+            <button class="tab-btn" data-tab="messages">💬 پیغامونه</button>
+        </div>
+
+        <!-- زده کوونکي برخه -->
+        <div id="students" class="data-section active">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د زده کوونکو لیست</h3>
+                    <span class="count-badge" id="studentCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="studentsLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د زده کوونکو معلومات راټولول...
+                    </div>
+                    <div id="studentsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ښوونکي برخه -->
+        <div id="teachers" class="data-section">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د ښوونکو لیست</h3>
+                    <span class="count-badge" id="teacherCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="teachersLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د ښوونکو معلومات راټولول...
+                    </div>
+                    <div id="teachersContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- حاضري برخه -->
+        <div id="attendance" class="data-section">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د حاضري ریکارډونه</h3>
+                    <span class="count-badge" id="attendanceCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="attendanceLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د حاضري معلومات راټولول...
+                    </div>
+                    <div id="attendanceContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- مالیات برخه -->
+        <div id="finance" class="data-section">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د مالی ریکارډونه</h3>
+                    <span class="count-badge" id="financeCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="financeLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د مالی معلومات راټولول...
+                    </div>
+                    <div id="financeContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نتایج برخه -->
+        <div id="results" class="data-section">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د امتحان نتایج</h3>
+                    <span class="count-badge" id="resultsCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="resultsLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د نتایج معلومات راټولول...
+                    </div>
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- پیغامونه برخه -->
+        <div id="messages" class="data-section">
+            <div class="data-card">
+                <div class="data-header">
+                    <h3>د چټ پیغامونه</h3>
+                    <span class="count-badge" id="messagesCount">0</span>
+                </div>
+                <div class="data-content">
+                    <div id="messagesLoading" class="loading">
+                        <div class="loading-spinner"></div>
+                        د پیغامونو معلومات راټولول...
+                    </div>
+                    <div id="messagesContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-btn" onclick="window.history.back()">🔙 بېرته</button>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // فایربیس تنظیمات
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+            authDomain: "babahotakschool.firebaseapp.com",
+            projectId: "babahotakschool",
+            storageBucket: "babahotakschool.firebasestorage.app",
+            messagingSenderId: "12958892996",
+            appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+        };
+
+        // فایربیس پیلول
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // د ټیبونو مدیریت
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const dataSections = document.querySelectorAll('.data-section');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // د ټیب بندول
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                dataSections.forEach(section => section.classList.remove('active'));
+                
+                // نوی ټیب فعالول
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // د احصایو پورته کول
+        async function loadStats() {
+            const statsBar = document.getElementById('statsBar');
+            statsBar.innerHTML = `
+                <div class="stat-card">
+                    <h3 id="totalStudents">0</h3>
+                    <p>ټول زده کوونکي</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalTeachers">0</h3>
+                    <p>ټول ښوونکي</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalAttendance">0</h3>
+                    <p>حاضري ریکارډونه</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalFinance">0</h3>
+                    <p>مالي ریکارډونه</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalResults">0</h3>
+                    <p>نتایج</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalMessages">0</h3>
+                    <p>پیغامونه</p>
+                </div>
+            `;
+
+            try {
+                // د زده کوونکو شمېر
+                const studentsSnap = await db.collection("babaStudents").get();
+                document.getElementById('totalStudents').textContent = studentsSnap.size;
+                document.getElementById('studentCount').textContent = studentsSnap.size;
+
+                // د ښوونکو شمېر
+                const teachersSnap = await db.collection("babaTeachers").get();
+                document.getElementById('totalTeachers').textContent = teachersSnap.size;
+                document.getElementById('teacherCount').textContent = teachersSnap.size;
+
+                // د حاضري شمېر
+                const attendanceSnap = await db.collection("babaAttendance").get();
+                document.getElementById('totalAttendance').textContent = attendanceSnap.size;
+                document.getElementById('attendanceCount').textContent = attendanceSnap.size;
+
+                // د مالیاتو شمېر
+                const financeSnap = await db.collection("babaFinance").get();
+                document.getElementById('totalFinance').textContent = financeSnap.size;
+                document.getElementById('financeCount').textContent = financeSnap.size;
+
+                // د نتایجو شمېر
+                const resultsSnap = await db.collection("babaResults").get();
+                document.getElementById('totalResults').textContent = resultsSnap.size;
+                document.getElementById('resultsCount').textContent = resultsSnap.size;
+
+                // د پیغامونو شمېر
+                const messagesSnap = await db.collection("adminChat").get();
+                document.getElementById('totalMessages').textContent = messagesSnap.size;
+                document.getElementById('messagesCount').textContent = messagesSnap.size;
+
+            } catch (error) {
+                console.error("د احصایو په پورته کولو کې ستونزه:", error);
+            }
+        }
+
+        // د زده کوونکو ډیټا پورته کول
+        async function loadStudents() {
+            const loadingDiv = document.getElementById('studentsLoading');
+            const contentDiv = document.getElementById('studentsContent');
+
+            try {
+                const snapshot = await db.collection("babaStudents").get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ زده کوونکی و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>نوم</th>
+                            <th>د پلار نوم</th>
+                            <th>ټولګی</th>
+                            <th>فون نمبر</th>
+                            <th>نږدې اړیکه</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                snapshot.forEach(doc => {
+                    const student = doc.data();
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td><strong>${student.name || 'نشته'}</strong></td>
+                            <td>${student.fatherName || 'نشته'}</td>
+                            <td>${student.class || 'نشته'}</td>
+                            <td>${student.phone || 'نشته'}</td>
+                            <td>${student.emergencyPhone || 'نشته'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د زده کوونکو په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د ښوونکو ډیټا پورته کول
+        async function loadTeachers() {
+            const loadingDiv = document.getElementById('teachersLoading');
+            const contentDiv = document.getElementById('teachersContent');
+
+            try {
+                const snapshot = await db.collection("babaTeachers").get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ ښوونکی و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>نوم</th>
+                            <th>دنده</th>
+                            <th>برخه</th>
+                            <th>فون نمبر</th>
+                            <th>بریښنالیک</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                snapshot.forEach(doc => {
+                    const teacher = doc.data();
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td><strong>${teacher.name || 'نشته'}</strong></td>
+                            <td>${teacher.position || 'ښوونکی'}</td>
+                            <td>${teacher.department || 'نشته'}</td>
+                            <td>${teacher.phone || 'نشته'}</td>
+                            <td>${teacher.email || 'نشته'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د ښوونکو په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د حاضري ډیټا پورته کول
+        async function loadAttendance() {
+            const loadingDiv = document.getElementById('attendanceLoading');
+            const contentDiv = document.getElementById('attendanceContent');
+
+            try {
+                const snapshot = await db.collection("babaAttendance").orderBy("date", "desc").limit(50).get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ حاضري ریکارډ و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>نېټه</th>
+                            <th>ټولګی</th>
+                            <th>مضمون</th>
+                            <th>حاضري</th>
+                            <th>نورې مالومات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                snapshot.forEach(doc => {
+                    const attendance = doc.data();
+                    const records = attendance.records || {};
+                    const presentCount = Object.values(records).filter(v => v === 'حاضر' || v === 'present').length;
+                    const absentCount = Object.values(records).filter(v => v === 'غیرحاضر' || v === 'absent').length;
+                    
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td>${attendance.date || 'نشته'}</td>
+                            <td>${attendance.class || 'نشته'}</td>
+                            <td>${attendance.subject || 'نشته'}</td>
+                            <td>
+                                <span style="color: #2ecc71; font-weight: bold;">${presentCount} حاضر</span><br>
+                                <span style="color: #e74c3c; font-weight: bold;">${absentCount} غیرحاضر</span>
+                            </td>
+                            <td>
+                                <small>ټول: ${Object.keys(records).length}</small><br>
+                                <small>ښوونکی: ${attendance.teacherName || 'نشته'}</small>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د حاضري په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د مالیاتو ډیټا پورته کول
+        async function loadFinance() {
+            const loadingDiv = document.getElementById('financeLoading');
+            const contentDiv = document.getElementById('financeContent');
+
+            try {
+                const snapshot = await db.collection("babaFinance").orderBy("date", "desc").limit(50).get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ مالي ریکارډ و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>نېټه</th>
+                            <th>زده کوونکی</th>
+                            <th>ټولګی</th>
+                            <th>د عاید ډول</th>
+                            <th>مقدار</th>
+                            <th>تفصیل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                let totalAmount = 0;
+                
+                snapshot.forEach(doc => {
+                    const finance = doc.data();
+                    const amount = parseFloat(finance.amount) || 0;
+                    totalAmount += amount;
+                    
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td>${finance.date || 'نشته'}</td>
+                            <td>${finance.studentName || 'نشته'}</td>
+                            <td>${finance.class || 'نشته'}</td>
+                            <td>
+                                <span style="color: ${finance.type === 'عاید' ? '#2ecc71' : '#e74c3c'}; font-weight: bold;">
+                                    ${finance.type || 'نشته'}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: ${finance.type === 'عاید' ? '#2ecc71' : '#e74c3c'}; font-weight: bold;">
+                                    ${amount.toLocaleString()} AFN
+                                </span>
+                            </td>
+                            <td>${finance.description || 'نشته'}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                
+                // د مجموعې کچه
+                const summary = `
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                        <h4 style="color: #2ecc71; margin-bottom: 10px;">📊 مالي لنډیز</h4>
+                        <p style="font-size: 18px; font-weight: bold;">
+                            ټوله مجموعه: <span style="color: #2ecc71;">${totalAmount.toLocaleString()} AFN</span>
+                        </p>
+                        <p style="font-size: 14px; color: #7f8c8d;">
+                            ټول ریکارډونه: ${snapshot.size}
+                        </p>
+                    </div>
+                `;
+
+                contentDiv.innerHTML = html + summary;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د مالیاتو په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د نتایجو ډیټا پورته کول
+        async function loadResults() {
+            const loadingDiv = document.getElementById('resultsLoading');
+            const contentDiv = document.getElementById('resultsContent');
+
+            try {
+                const snapshot = await db.collection("babaResults").orderBy("total", "desc").limit(50).get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ نتیجه و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>زده کوونکی</th>
+                            <th>ټولګی</th>
+                            <th>مضمون</th>
+                            <th>ټول نمرې</th>
+                            <th>حاصله نمرې</th>
+                            <th>سلنه</th>
+                            <th>حالت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                let passedCount = 0;
+                let failedCount = 0;
+                
+                snapshot.forEach(doc => {
+                    const result = doc.data();
+                    const total = parseFloat(result.total) || 100;
+                    const obtained = parseFloat(result.obtained) || 0;
+                    const percentage = total > 0 ? ((obtained / total) * 100).toFixed(1) : 0;
+                    const status = percentage >= 40 ? 'کامیاب' : 'ناکام';
+                    
+                    if (status === 'کامیاب') passedCount++;
+                    else failedCount++;
+                    
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td><strong>${result.studentName || 'نشته'}</strong></td>
+                            <td>${result.class || 'نشته'}</td>
+                            <td>${result.subject || 'نشته'}</td>
+                            <td>${total}</td>
+                            <td>
+                                <span style="color: ${percentage >= 40 ? '#2ecc71' : '#e74c3c'}; font-weight: bold;">
+                                    ${obtained}
+                                </span>
+                            </td>
+                            <td>
+                                <span style="color: ${percentage >= 40 ? '#2ecc71' : '#e74c3c'}; font-weight: bold;">
+                                    ${percentage}%
+                                </span>
+                            </td>
+                            <td>
+                                <span style="background: ${percentage >= 40 ? '#d4edda' : '#f8d7da'}; 
+                                      color: ${percentage >= 40 ? '#155724' : '#721c24'};
+                                      padding: 4px 8px; border-radius: 4px; font-weight: bold;">
+                                    ${status}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                
+                // د خلاصون کچه
+                const summary = `
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                        <h4 style="color: #2ecc71; margin-bottom: 10px;">📊 د نتیجې لنډیز</h4>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <div>
+                                <p style="color: #2ecc71; font-weight: bold; font-size: 18px;">${passedCount} کامیاب</p>
+                                <p style="font-size: 14px; color: #7f8c8d;">د کامیابو شمېر</p>
+                            </div>
+                            <div>
+                                <p style="color: #e74c3c; font-weight: bold; font-size: 18px;">${failedCount} ناکام</p>
+                                <p style="font-size: 14px; color: #7f8c8d;">د ناکامو شمېر</p>
+                            </div>
+                            <div>
+                                <p style="color: #3498db; font-weight: bold; font-size: 18px;">${passedCount + failedCount} ټول</p>
+                                <p style="font-size: 14px; color: #7f8c8d;">ټول زده کوونکي</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                contentDiv.innerHTML = html + summary;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د نتایجو په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د پیغامونو ډیټا پورته کول
+        async function loadMessages() {
+            const loadingDiv = document.getElementById('messagesLoading');
+            const contentDiv = document.getElementById('messagesContent');
+
+            try {
+                const snapshot = await db.collection("adminChat").orderBy("time", "desc").limit(50).get();
+                
+                if (snapshot.empty) {
+                    contentDiv.innerHTML = '<div class="empty-state">❌ هیڅ پیغام و نه موندل شو</div>';
+                    loadingDiv.style.display = 'none';
+                    return;
+                }
+
+                let html = '<table class="data-table">';
+                html += `
+                    <thead>
+                        <tr>
+                            <th>نمبر</th>
+                            <th>لیکوال</th>
+                            <th>پیغام</th>
+                            <th>وخت</th>
+                            <th>حالت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                let counter = 1;
+                snapshot.forEach(doc => {
+                    const message = doc.data();
+                    const time = message.time ? 
+                        (message.time.toDate ? message.time.toDate().toLocaleString() : message.time) : 
+                        'نشته';
+                    
+                    html += `
+                        <tr>
+                            <td>${counter++}</td>
+                            <td><strong>${message.senderName || 'نشته'}</strong></td>
+                            <td style="max-width: 300px;">
+                                <div style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin: 5px 0;">
+                                    ${message.text || 'نشته'}
+                                </div>
+                                ${message.senderRole ? `<small style="color: #7f8c8d;">${message.senderRole}</small>` : ''}
+                            </td>
+                            <td><small style="color: #7f8c8d;">${time}</small></td>
+                            <td>
+                                <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
+                                    ${message.status || 'لیکل شوی'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                contentDiv.innerHTML = html;
+                loadingDiv.style.display = 'none';
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                contentDiv.innerHTML = `
+                    <div class="error-state">
+                        ❌ د پیغامونو په پورته کولو کې ستونزه: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // د پاڼې لوډ کول
+        window.onload = async () => {
+            // لومړی احصایې پورته کول
+            await loadStats();
+            
+            // بیا ټول ډیټا پورته کول
+            await loadStudents();
+            await loadTeachers();
+            await loadAttendance();
+            await loadFinance();
+            await loadResults();
+            await loadMessages();
+            
+            // د ټیبونو د بدلون لیسنر
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const tabId = btn.getAttribute('data-tab');
+                    const contentDiv = document.getElementById(`${tabId}Content`);
+                    
+                    // که ډیټا نه وي پورته شوی، بیا یې پورته کول
+                    if (contentDiv.innerHTML.includes('loading-spinner') || contentDiv.innerHTML === '') {
+                        switch(tabId) {
+                            case 'students':
+                                await loadStudents();
+                                break;
+                            case 'teachers':
+                                await loadTeachers();
+                                break;
+                            case 'attendance':
+                                await loadAttendance();
+                                break;
+                            case 'finance':
+                                await loadFinance();
+                                break;
+                            case 'results':
+                                await loadResults();
+                                break;
+                            case 'messages':
+                                await loadMessages();
+                                break;
+                        }
+                    }
+                });
+            });
+        };
+
+        // د تازه کولو فنکشن
+        async function refreshData() {
+            await loadStats();
+            const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+            
+            switch(activeTab) {
+                case 'students':
+                    await loadStudents();
+                    break;
+                case 'teachers':
+                    await loadTeachers();
+                    break;
+                case 'attendance':
+                    await loadAttendance();
+                    break;
+                case 'finance':
+                    await loadFinance();
+                    break;
+                case 'results':
+                    await loadResults();
+                    break;
+                case 'messages':
+                    await loadMessages();
+                    break;
+            }
+            
+            alert('✅ ټوله ډیټا تازه شوه!');
+        }
+
+        // د تازه کولو بټن اضافه کول
+        const refreshBtn = document.createElement('button');
+        refreshBtn.textContent = '🔄 تازه کول';
+        refreshBtn.style.position = 'fixed';
+        refreshBtn.style.bottom = '30px';
+        refreshBtn.style.right = '30px';
+        refreshBtn.style.background = '#2ecc71';
+        refreshBtn.style.color = 'white';
+        refreshBtn.style.border = 'none';
+        refreshBtn.style.padding = '12px 24px';
+        refreshBtn.style.borderRadius = '8px';
+        refreshBtn.style.cursor = 'pointer';
+        refreshBtn.style.fontWeight = 'bold';
+        refreshBtn.style.boxShadow = '0 4px 15px rgba(46, 204, 113, 0.3)';
+        refreshBtn.style.zIndex = '1000';
+        refreshBtn.onclick = refreshData;
+        document.body.appendChild(refreshBtn);
+    </script>
+</body>
+</html>

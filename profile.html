@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زما پروفایل - بابا هوتک لیسه</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary: #3498db; --secondary: #2c3e50; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); margin: 0; direction: rtl; }
+        .header { background: linear-gradient(135deg, var(--primary), #2980b9); height: 160px; display: flex; align-items: center; justify-content: center; color: white; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; }
+        .profile-container { max-width: 450px; margin: -50px auto 20px; padding: 0 15px; }
+        .profile-card { background: white; border-radius: 25px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .profile-img { width: 110px; height: 110px; border-radius: 50%; border: 4px solid white; object-fit: cover; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background: #eee; }
+        .user-name { font-size: 22px; font-weight: bold; margin: 10px 0 5px; color: var(--secondary); }
+        .user-role { display: inline-block; background: #e1f0ff; color: var(--primary); padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+        .info-list { text-align: right; margin-top: 15px; }
+        .info-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 15px; border: 1px solid #eee; }
+        .info-icon { width: 35px; height: 35px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .info-content label { display: block; font-size: 11px; color: #888; }
+        .info-content span { font-weight: 600; font-size: 14px; color: #333; }
+        .logout-btn { width: 100%; padding: 12px; border-radius: 15px; border: none; background: #fff0f0; color: #e74c3c; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .loading { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; justify-content:center; align-items:center; z-index:99; }
+    </style>
+</head>
+<body>
+
+<div id="loading" class="loading">بیا رغونه...</div>
+
+<div class="header"><h2>پروفایل</h2></div>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <img src="https://via.placeholder.com/150" id="displayPhoto" class="profile-img">
+        <div class="user-name" id="displayName">---</div>
+        <div class="user-role" id="displayRole">---</div>
+
+        <div class="info-list">
+            <div class="info-item">
+                <div class="info-icon">👤</div>
+                <div class="info-content"><label>د پلار نوم</label><span id="displayFname">---</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">🆔</div>
+                <div class="info-content"><label>د مراجعې شمېره (Order No)</label><span id="displayID">---</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">📚</div>
+                <div class="info-content"><label>مضمون</label><span id="displaySubject">---</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">💰</div>
+                <div class="info-content"><label>میاشتنی معاش</label><span id="displaySalary">---</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">📱</div>
+                <div class="info-content"><label>موبایل</label><span id="displayPhone">---</span></div>
+            </div>
+        </div>
+
+        <button class="logout-btn" onclick="localStorage.clear(); window.location.href='login.html';">وتل 🚪</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function loadProfile() {
+        const userId = localStorage.getItem('userId');
+        const userRole = localStorage.getItem('userRole');
+
+        if (!userId) { window.location.href = 'login.html'; return; }
+
+        try {
+            // ستا د کلکشن نوم: babaTeachers
+            let colName = (userRole === "زده کوونکی") ? "babaStudents" : "babaTeachers";
+            const doc = await db.collection(colName).doc(userId).get();
+
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('displayName').innerText = data.name || 'نامعلوم';
+                document.getElementById('displayFname').innerText = data.fname || '---';
+                document.getElementById('displayID').innerText = data.orderNo || '---';
+                document.getElementById('displayPhone').innerText = data.phone || 'نشته';
+                document.getElementById('displayRole').innerText = data.role || 'ښوونکی';
+                document.getElementById('displaySubject').innerText = data.subject || '---';
+                document.getElementById('displaySalary').innerText = data.salary ? data.salary + " افغانۍ" : "---";
+                
+                if(data.photo && data.photo !== "") document.getElementById('displayPhoto').src = data.photo;
+            }
+        } catch (e) { console.error(e); }
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    window.onload = loadProfile;
+</script>
+</body>
+</html>

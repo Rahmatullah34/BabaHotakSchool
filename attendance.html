@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د غیرحاضرانو راپور - مدیر</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --danger: #e74c3c; --warning: #f1c40f; --primary: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; direction: rtl; margin: 0; padding: 15px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; }
+        
+        .filter-box { background: #eef2f3; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; }
+        input[type="date"] { padding: 10px; border-radius: 8px; border: 1px solid #ddd; flex: 1; }
+        
+        .absent-card { border: 1px solid #eee; border-right: 5px solid var(--danger); padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .absent-card.leave { border-right-color: var(--warning); }
+        
+        .info h4 { margin: 0 0 5px 0; color: #2c3e50; }
+        .info p { margin: 0; font-size: 13px; color: #7f8c8d; }
+        
+        .status-tag { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
+        .tag-absent { background: var(--danger); }
+        .tag-leave { background: var(--warning); color: #000; }
+        
+        .whatsapp-btn { background: #25D366; color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 12px; }
+        .no-data { text-align: center; padding: 40px; color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h3>📊 د غیرحاضرانو او رخصتانو لیست</h3>
+        <button onclick="history.back()" style="padding:5px 15px; border-radius:8px; border:1px solid #ccc; cursor:pointer;">شاته</button>
+    </div>
+
+    <div class="filter-box">
+        <input type="date" id="reportDate" onchange="loadReport()">
+        <button onclick="loadReport()" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer;">راپور ښکاره کړه</button>
+    </div>
+
+    <div id="reportList">
+        </div>
+</div>
+<button onclick="toggleMonthlyReport()" style="width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 12px; font-size: 16px; margin-top: 10px; cursor: pointer;">📅 د میاشتني راپور لیدل</button>
+
+<div id="monthlyReportSection" style="display:none; margin-top: 20px; background: white; padding: 15px; border-radius: 15px; border: 1px solid #ddd; overflow-x: auto;">
+    <h3 style="text-align: center; color: #2c3e50; border-bottom: 2px solid #27ae60; padding-bottom: 10px;">📊 د میاشتني حاضرۍ راپور</h3>
+    
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <select id="reportMonth" onchange="generateMonthlyReport()">
+            <option value="01">حمل (ورۍ)</option>
+            <option value="02">ثور (غويی)</option>
+            <option value="03">جوزا (غبرګولی)</option>
+            <option value="04">سرطان (چنګاښ)</option>
+            <option value="05">اسد (زمری)</option>
+            <option value="06">سنبله (وږی)</option>
+            <option value="07">میزان (تله)</option>
+            <option value="08">عقرب (لړم)</option>
+            <option value="09">قوس (لېندۍ)</option>
+            <option value="10">جدي (مرغومی)</option>
+            <option value="11">دلو (سلواغه)</option>
+            <option value="12">حوت (کب)</option>
+        </select>
+        <button onclick="printReport()" style="background:#34495e; color:white; border:none; padding:10px; border-radius:8px;">🖨️ چاپ</button>
+    </div>
+
+    <table id="monthlyGrid" style="font-size: 10px; width: 100%; text-align: center; border-collapse: collapse;">
+        <thead>
+            <tr id="gridHeader" style="background: #f8f9fa;">
+                <th style="border: 1px solid #ddd; padding: 5px;">نوم</th>
+                <th style="border: 1px solid #ddd; padding: 5px; background: #e8f5e9;">مجموعه</th>
+            </tr>
+        </thead>
+        <tbody id="gridBody">
+            </tbody>
+    </table>
+</div>
+
+<style>
+    /* د چاپ لپاره سټایل */
+    @media print {
+        body * { visibility: hidden; }
+        #monthlyReportSection, #monthlyReportSection * { visibility: visible; }
+        #monthlyReportSection { position: absolute; left: 0; top: 0; width: 100%; }
+        select, button { display: none; }
+    }
+    .cell-p { color: #2ecc71; font-weight: bold; } /* حاضر */
+    .cell-a { color: #e74c3c; font-weight: bold; } /* غیرحاضر */
+    .cell-l { color: #f1c40f; font-weight: bold; } /* رخصت */
+</style>
+
+<script>
+    function toggleMonthlyReport() {
+        const section = document.getElementById('monthlyReportSection');
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        if(section.style.display === 'block') generateMonthlyReport();
+    }
+
+    async function generateMonthlyReport() {
+        const grade = document.getElementById('attGrade').value;
+        const section = document.getElementById('attSection').value;
+        const month = document.getElementById('reportMonth').value;
+        const headerRow = document.getElementById('gridHeader');
+        const body = document.getElementById('gridBody');
+
+        if (!grade || !section) return alert("لومړی ټولګی وټاکئ!");
+
+        // د جدول هېډر جوړول (۱ تر ۳۰ نېټې)
+        headerRow.innerHTML = '<th style="border: 1px solid #ddd; padding: 5px; width:80px;">شاګرد</th>';
+        for (let i = 1; i <= 30; i++) {
+            headerRow.innerHTML += `<th style="border: 1px solid #ddd; font-size:8px;">${i}</th>`;
+        }
+        headerRow.innerHTML += '<th style="border: 1px solid #ddd; padding: 5px; background: #fee2e2;">غ</th>';
+
+        body.innerHTML = "لوډ کېږي...";
+
+        try {
+            // له فایربیس څخه د دې صنف د میاشتې ډاټا اخیستل
+            const studentsSnap = await db.collection("babaStudents")
+                                        .where("grade", "==", grade)
+                                        .where("section", "==", section)
+                                        .get();
+
+            body.innerHTML = "";
+            
+            for (const sDoc of studentsSnap.docs) {
+                const s = sDoc.data();
+                let rowHtml = `<tr style="border-bottom: 1px solid #eee;">
+                                <td style="text-align:right; border: 1px solid #ddd; padding:3px;"><b>${s.name}</b></td>`;
+                
+                let absentCount = 0;
+
+                // د هرې ورځې لپاره چیک کول (دا برخه ستاسو د ډیټابیس سټرکچر سره وصل ده)
+                for (let d = 1; d <= 30; d++) {
+                    const dayStr = d < 10 ? '0' + d : d;
+                    const fullDate = `2025-${month}-${dayStr}`; // دلته کال ډینامیک هم کیدای شي
+                    
+                    // په فرضي ډول د ډیټا لټون (اصلي کوډ کې باید له حافظې یا فایربیس څخه فلټر شي)
+                    let status = ""; 
+                    // په دې ځای کې ستاسو د حاضري لوجیک سره سم ډاټا ډکېږي
+                    rowHtml += `<td style="border: 1px solid #ddd; font-size:8px;">${status}</td>`;
+                }
+
+                rowHtml += `<td style="border: 1px solid #ddd; background:#fff5f5; color:red;">${absentCount}</td></tr>`;
+                body.innerHTML += rowHtml;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function printReport() { window.print(); }
+</script>
+
+<script>
+    // ستاسو فایربیس ترتیب
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // نننی تاریخ په اتومات ډول
+    document.getElementById('reportDate').valueAsDate = new Date();
+
+    async function loadReport() {
+        const selectedDate = document.getElementById('reportDate').value;
+        const listDiv = document.getElementById('reportList');
+        listDiv.innerHTML = "<p style='text-align:center;'>لوډ کېږي...</p>";
+
+        try {
+            // له ډیټابیس څخه یوازې غیرحاضر (absent) او رخصت (leave) راکاږي
+            const snapshot = await db.collection("babaAttendance")
+                .where("date", "==", selectedDate)
+                .where("status", "in", ["absent", "leave"])
+                .get();
+
+            if (snapshot.empty) {
+                listDiv.innerHTML = "<div class='no-data'>په دې نېټه هیڅ غیرحاضر یا رخصت زده‌کوونکی نشته. 😊</div>";
+                return;
+            }
+
+            listDiv.innerHTML = "";
+            
+            // د هر ریکارډ لپاره د زده‌کوونکي معلومات اخلي
+            for (const doc of snapshot.docs) {
+                const att = doc.data();
+                const studentId = att.studentId;
+                
+                // د زده‌کوونکي نوم او شمېره له بل کلکشن څخه اخلي
+                const stDoc = await db.collection("babaStudents").doc(studentId).get();
+                const s = stDoc.data() || { name: att.name || "نامعلوم", phone: "" };
+
+                const statusClass = att.status === 'absent' ? '' : 'leave';
+                const tagClass = att.status === 'absent' ? 'tag-absent' : 'tag-leave';
+                const statusName = att.status === 'absent' ? 'غیرحاضر' : 'رخصت';
+
+                listDiv.innerHTML += `
+                    <div class="absent-card ${statusClass}">
+                        <div class="info">
+                            <h4>${s.name}</h4>
+                            <p>صنف: ${s.grade || att.class || ''} (${s.section || att.section || ''}) | پلار: ${s.father || ''}</p>
+                            <span class="status-tag ${tagClass}">${statusName}</span>
+                        </div>
+                        <div>
+                            ${s.phone ? 
+                                `<a href="https://wa.me/${s.phone}?text=سلام، ستاسو زوی ${s.name} نن په ${selectedDate} نېټه ښوونځي ته نه دی راغلی." target="_blank" class="whatsapp-btn">واټساپ</a>` 
+                                : '<small>شمېره نشته</small>'}
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            listDiv.innerHTML = "<p style='color:red;'>تېروتنه: " + e.message + "</p>";
+        }
+    }
+
+    // کله چې پاڼه لوډ شي، راپور په اتومات ډول ښکاره کړه
+    window.onload = loadReport;
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زما حاضري - بابا هوتک لیسه</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; --bg: #f0f4f8; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        
+        .header { background: white; padding: 20px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .back-btn { background: #eee; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; text-decoration: none; color: black; font-size: 14px; }
+        
+        select { padding: 8px; border-radius: 10px; border: 1px solid #ddd; font-family: inherit; outline: none; background: #fff; cursor: pointer; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .stat-card h2 { margin: 0; color: var(--success); font-size: 28px; }
+        .stat-card p { margin: 5px 0 0; color: #7f8c8d; font-size: 14px; }
+
+        .attendance-table-container { background: white; padding: 15px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 200px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8f9fa; padding: 12px; text-align: center; font-size: 14px; color: #2c3e50; border-bottom: 2px solid #eee; }
+        td { padding: 15px; text-align: center; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+        
+        /* د سوب او ناسوب لپاره سټایل */
+        .status-present { background: #e8f5e9; color: var(--success); padding: 6px 12px; border-radius: 10px; font-weight: bold; }
+        .status-absent { background: #ffebee; color: var(--danger); padding: 6px 12px; border-radius: 10px; font-weight: bold; }
+        .status-leave { background: #fff3e0; color: var(--warning); padding: 6px 12px; border-radius: 10px; font-weight: bold; }
+        
+        #loading { text-align: center; padding: 40px; color: #7f8c8d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h3 style="margin:0;">📅 زما د حاضرۍ راپور</h3>
+    <select id="monthFilter" onchange="getAttendance()">
+        <option value="all">ټول کال</option>
+        <option value="01">وری (حمل)</option>
+        <option value="02">غویی (ثور)</option>
+        <option value="03">غبرګولی (جوزا)</option>
+        <option value="04">چنګاښ (سرطان)</option>
+        <option value="05">زمری (اسد)</option>
+        <option value="06">وږی (سنبله)</option>
+        <option value="07">تله (میزان)</option>
+        <option value="08">لړم (عقرب)</option>
+        <option value="09">لیندۍ (قوس)</option>
+        <option value="10">مرغومی (جدي)</option>
+        <option value="11">سلواغه (دلوه)</option>
+        <option value="12">کب (حوت)</option>
+    </select>
+    <a href="student_dashboard.html" class="back-btn">شا ته ⬅️</a>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card"><h2 id="rateDisplay">0%</h2><p>سلنه (فیصدي)</p></div>
+    <div class="stat-card"><h2 id="presentCount">0</h2><p>حاضرې ورځې</p></div>
+</div>
+
+<div class="attendance-table-container">
+    <div id="loading">معلومات راوړل کېږي...</div>
+    <table id="attendanceTable" style="display: none;">
+        <thead>
+            <tr>
+                <th>نېټه</th>
+                <th>حالت</th>
+            </tr>
+        </thead>
+        <tbody id="attendanceList"></tbody>
+    </table>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const studentId = localStorage.getItem('userId');
+
+    async function getAttendance() {
+        if (!studentId) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        document.getElementById('loading').innerText = "معلومات راوړل کېږي...";
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('attendanceTable').style.display = 'none';
+
+        try {
+            // له فایربیس څخه د معلوماتو راوړل
+            const snapshot = await db.collection("babaAttendance")
+                .where("studentId", "==", studentId)
+                .get();
+
+            if (snapshot.empty) {
+                document.getElementById('loading').innerText = "د حاضرۍ هیڅ ریکارډ ونه موندل شو.";
+                return;
+            }
+
+            let attendanceArray = [];
+            snapshot.forEach(doc => attendanceArray.push(doc.data()));
+
+            // نېټه تنظیمول (له نوې څخه زړې ته)
+            attendanceArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const selectedMonth = document.getElementById('monthFilter').value;
+            let totalFiltered = 0;
+            let present = 0;
+            let html = "";
+
+            attendanceArray.forEach(data => {
+                // نېټه باید 2026-01-14 فارمټ کې وي
+                const dateParts = data.date.split('-');
+                const month = dateParts[1];
+
+                if (selectedMonth !== 'all' && month !== selectedMonth) return;
+
+                totalFiltered++;
+                let statusText = "ناسوب";
+                let statusClass = "status-absent";
+
+                // د 'سوب' او 'ناسوب' منطق دلته دی
+                if (data.status === 'سوب' || data.status === 'present') {
+                    statusText = "سوب (حاضر)";
+                    statusClass = "status-present";
+                    present++;
+                } else if (data.status === 'رخصت' || data.status === 'leave') {
+                    statusText = "رخصت";
+                    statusClass = "status-leave";
+                } else {
+                    statusText = "ناسوب (غیرحاضر)";
+                    statusClass = "status-absent";
+                }
+
+                html += `
+                    <tr>
+                        <td>${data.date || '---'}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+            });
+
+            if(totalFiltered === 0) {
+                document.getElementById('loading').innerText = "په دې میاشت کې ریکارډ نشته.";
+                document.getElementById('rateDisplay').innerText = "0%";
+                document.getElementById('presentCount').innerText = "0";
+                return;
+            }
+
+            const rate = Math.round((present / totalFiltered) * 100);
+            document.getElementById('rateDisplay').innerText = rate + "%";
+            document.getElementById('presentCount').innerText = present;
+            document.getElementById('attendanceList').innerHTML = html;
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('attendanceTable').style.display = 'table';
+
+        } catch (error) {
+            console.error("تېروتنه:", error);
+            document.getElementById('loading').innerText = "د معلوماتو په راوړلو کې ستونزه ده.";
+        }
+    }
+
+    window.onload = getAttendance;
+</script>
+
+</body>
+</html>

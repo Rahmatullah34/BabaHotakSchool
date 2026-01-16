@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ښوونکي هوښیار ډشبورډ - بابا هوتک</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { 
+            --main-blue: #004d99; 
+            --present: #27ae60; 
+            --absent: #e74c3c; 
+            --leave: #f1c40f; 
+            --sick: #e67e22; 
+            --whatsapp: #25D366; 
+            --sms-btn: #f39c12;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 10px; direction: rtl; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 15px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid var(--main-blue); margin-bottom: 15px; padding-bottom: 10px; }
+        
+        .bulk-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .btn-bulk { padding: 12px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
+
+        .student-card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .student-name { font-weight: bold; font-size: 17px; margin-bottom: 10px; display: block; color: #333; }
+        
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .btn-status { width: 100%; height: 45px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; background: white; }
+        
+        .active-p { background: var(--present) !important; color: white; border: none; }
+        .active-a { background: var(--absent) !important; color: white; border: none; }
+        .active-l { background: var(--leave) !important; color: white; border: none; }
+        .active-s { background: var(--sick) !important; color: white; border: none; }
+
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; }
+        .btn-comm { border: none; padding: 10px; border-radius: 8px; color: white; font-size: 12px; cursor: pointer; text-decoration: none; text-align: center; font-weight: bold; }
+
+        .save-btn { width: 100%; padding: 18px; background: var(--main-blue); color: white; border: none; border-radius: 15px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        
+        /* Modal Style */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; padding:10px; box-sizing: border-box; }
+        .modal-content { background:white; width:100%; max-width:1150px; margin:auto; border-radius:15px; padding:15px; height: 90vh; overflow-y: auto; position: relative; }
+        
+        .report-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; background: #f9f9f9; padding: 10px; border-radius: 10px; }
+        
+        /* Table Style */
+        .table-wrapper { overflow-x: auto; border: 1px solid #ddd; }
+        table { width:100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background: var(--main-blue); color: white; position: sticky; top: 0; }
+        .p-cell { background: #d4edda; color: #155724; font-weight: bold; }
+        .a-cell { background: #f8d7da; color: #721c24; font-weight: bold; }
+        .l-cell { background: #fff3cd; color: #856404; }
+        .s-cell { background: #ffeeba; color: #856404; }
+        .name-col { text-align: right; font-weight: bold; position: sticky; right: 0; background: white; z-index: 10; border-left: 2px solid var(--main-blue); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 id="displayTitle" style="margin:0;">📝 د صنف ډشبورډ</h2>
+        <p id="todayDate" style="color:var(--main-blue); font-weight:bold; margin: 5px 0;"></p>
+        <button onclick="openReportModal()" style="background:#8e24aa; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold;">📊 میاشتنی راپور</button>
+    </div>
+
+    <div class="bulk-actions">
+        <button class="btn-bulk" style="background:var(--present);" onclick="setAllStatus('present')">✅ ټول حاضر کړئ</button>
+        <button class="btn-bulk" style="background:var(--absent);" onclick="setAllStatus('absent')">❌ ټول غیرحاضر کړئ</button>
+    </div>
+
+    <div id="studentList">
+        <p style="text-align:center; padding:20px;">د شاګردانو لیست لوډ کېږي...</p>
+    </div>
+
+    <button class="save-btn" onclick="saveAttendance()">✅ نننۍ حاضري ثبت کړئ</button>
+</div>
+
+<div id="reportModal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="reportModalTitle" style="margin:0;">📅 میاشتنی راپور</h3>
+            <button onclick="closeReport()" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">تړل ✕</button>
+        </div>
+
+        <div class="report-controls">
+            <span>میاشت:</span>
+            <select id="monthSelect">
+                <option value="01">حمل</option><option value="02">ثور</option><option value="03">جوزا</option>
+                <option value="04">سرطان</option><option value="05">اسد</option><option value="06">سنبله</option>
+                <option value="07">میزان</option><option value="08">عقرب</option><option value="09">قوس</option>
+                <option value="10" selected>جدي</option><option value="11">دلو</option><option value="12">حوت</option>
+            </select>
+            <span>کال:</span>
+            <select id="yearSelect">
+                <option value="1403">۱۴۰۳</option><option value="1404" selected>۱۴۰۴</option><option value="1405">۱۴۰۵</option>
+            </select>
+            <button onclick="fetchMonthlyReport()" style="background:var(--main-blue); color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">راپور راوړئ</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="reportTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    projectId: "babahotakschool",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentClass = ""; 
+let currentSection = "";
+let attendanceData = {};
+let studentsInfo = {}; 
+let studentIDs = [];
+
+// Load Students Data
+async function loadStudents() {
+    const listDiv = document.getElementById('studentList');
+    const teacherId = localStorage.getItem('userId');
+    if (!teacherId) { alert("لطفاً لومړی ننوځئ!"); return; }
+
+    const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'persian' };
+    document.getElementById('todayDate').innerText = new Intl.DateTimeFormat('ps-AF-u-ca-persian', options).format(new Date());
+
+    try {
+        const tDoc = await db.collection("babaTeachers").doc(teacherId).get();
+        if (!tDoc.exists) return;
+
+        const tData = tDoc.data();
+        currentClass = tData.grade;
+        currentSection = (tData.section || "").split(' ')[0];
+
+        document.getElementById('displayTitle').innerText = `📝 د ${currentClass} (${tData.section}) ډشبورډ`;
+        document.getElementById('reportModalTitle').innerText = `📅 میاشتنی راپور (${currentClass} ${currentSection})`;
+
+        const snap = await db.collection("babaStudents")
+            .where("grade", "==", currentClass)
+            .where("section", "==", currentSection)
+            .get();
+
+        if (snap.empty) {
+            listDiv.innerHTML = "<p style='text-align:center;color:red;'>هیڅ شاګرد پیدا نشو!</p>";
+            return;
+        }
+
+        listDiv.innerHTML = ""; studentIDs = [];
+        snap.forEach(doc => {
+            let s = doc.data();
+            studentIDs.push(doc.id);
+            attendanceData[doc.id] = 'present';
+            studentsInfo[doc.id] = { name: s.name, father: s.fname || s.father || '---', phone: s.phone };
+
+            listDiv.innerHTML += `
+                <div class="student-card">
+                    <span class="student-name">${s.name} <small>(د ${studentsInfo[doc.id].father} زوی)</small></span>
+                    <div class="status-grid" id="btns-${doc.id}">
+                        <button class="btn-status active-p" data-status="present" onclick="setStatus('${doc.id}', 'present', this)">حاضر</button>
+                        <button class="btn-status" data-status="absent" onclick="setStatus('${doc.id}', 'absent', this)">غیرحاضر</button>
+                        <button class="btn-status" data-status="leave" onclick="setStatus('${doc.id}', 'leave', this)">رخصت</button>
+                        <button class="btn-status" data-status="sick" onclick="setStatus('${doc.id}', 'sick', this)">ناروغ</button>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn-comm" style="background:var(--whatsapp);" onclick="window.open('https://wa.me/${s.phone}')">WA</button>
+                        <button class="btn-comm" style="background:var(--sms-btn);" onclick="sendSMS('${doc.id}')">SMS</button>
+                        <a href="tel:${s.phone}" class="btn-comm" style="background:#546e7a;">اړیکه</a>
+                    </div>
+                </div>`;
+        });
+    } catch (e) { listDiv.innerHTML = "تېروتنه: " + e.message; }
+}
+
+function setStatus(id, status, btn) {
+    attendanceData[id] = status;
+    const parent = document.getElementById(`btns-${id}`);
+    Array.from(parent.children).forEach(b => b.className = 'btn-status');
+    btn.className = `btn-status active-${status.charAt(0)}`;
+}
+
+function setAllStatus(status) {
+    studentIDs.forEach(id => {
+        const parent = document.getElementById(`btns-${id}`);
+        const btn = parent.querySelector(`button[data-status="${status}"]`);
+        setStatus(id, status, btn);
+    });
+}
+
+function sendSMS(id) {
+    const s = studentsInfo[id];
+    const status = attendanceData[id];
+    if (status === 'present') { alert("حاضر شاګرد ته اړتیا نشته."); return; }
+    let text = (status === 'absent') ? "غیرحاضر" : "رخصت/ناروغ";
+    let message = `محترم ستاسو د (${s.name}) زوی نن ښوونځي کې ${text} دی.`;
+    window.location.href = `sms:${s.phone}?body=${encodeURIComponent(message)}`;
+}
+
+async function saveAttendance() {
+    const iso = new Date().toISOString().split('T')[0];
+    const shamsiDate = new Intl.DateTimeFormat('en-u-ca-persian', {year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+    const cleanShamsi = shamsiDate.replace(/[\u200E\u200F]/g, ''); 
+
+    try {
+        for (const [id, status] of Object.entries(attendanceData)) {
+            await db.collection("babaAttendance").doc(`${id}_${iso}`).set({
+                studentId: id, status: status, date: iso, shamsiDate: cleanShamsi, class: currentClass, section: currentSection
+            });
+        }
+        alert("✅ حاضري په بریالیتوب سره ثبت شوه!");
+    } catch (e) { alert("تېروتنه: " + e.message); }
+}
+
+// Report Logic
+function openReportModal() { 
+    document.getElementById('reportModal').style.display = 'block'; 
+    fetchMonthlyReport(); 
+}
+
+function closeReport() { 
+    document.getElementById('reportModal').style.display = 'none'; 
+}
+
+async function fetchMonthlyReport() {
+    const body = document.getElementById('tableBody');
+    const head = document.getElementById('tableHead');
+    const m = document.getElementById('monthSelect').value;
+    const y = document.getElementById('yearSelect').value;
+    
+    body.innerHTML = "<tr><td colspan='35'>ډاټا لوډېږي...</td></tr>";
+
+    try {
+        // ۱. د شاګردانو لیست راوړل
+        const sSnap = await db.collection("babaStudents")
+            .where("grade", "==", currentClass)
+            .where("section", "==", currentSection)
+            .get();
+        
+        let sMap = {}; 
+        sSnap.forEach(d => sMap[d.id] = d.data().name);
+
+        // ۲. د حاضرۍ ډاټا راوړل
+        const aSnap = await db.collection("babaAttendance")
+            .where("class", "==", currentClass)
+            .where("section", "==", currentSection)
+            .get();
+
+        let report = {};
+        aSnap.forEach(d => {
+            const data = d.data();
+            if(data.shamsiDate) {
+                let cleanDate = data.shamsiDate.replace(/[\u200E\u200F]/g, '').trim();
+                let parts = cleanDate.split('/'); 
+                
+                let dbY = parts[0].length === 4 ? parts[0] : parts[2];
+                let dbM = parts[0].length === 4 ? parts[1] : parts[0];
+                let dbD = parts[0].length === 4 ? parts[2] : parts[1];
+
+                if(parseInt(dbY) == parseInt(y) && parseInt(dbM) == parseInt(m)) {
+                    if(!report[data.studentId]) report[data.studentId] = {};
+                    report[data.studentId][parseInt(dbD)] = data.status;
+                }
+            }
+        });
+
+        // ۳. د جدول سر (Days 1 to 31)
+        let headHTML = "<tr><th class='name-col'>د شاګرد نوم</th>";
+        for(let i=1; i<=31; i++) headHTML += `<th>${i}</th>`;
+        head.innerHTML = headHTML + "</tr>";
+
+        // ۴. د جدول ډاټا
+        let bodyHTML = "";
+        Object.keys(sMap).forEach(id => {
+            bodyHTML += `<tr><td class="name-col">${sMap[id]}</td>`;
+            for(let i=1; i<=31; i++) {
+                const stat = report[id] ? report[id][i] : '';
+                let sym = '', cls = '';
+                if(stat === 'present') { sym = 'ح'; cls = 'p-cell'; }
+                else if(stat === 'absent') { sym = 'غ'; cls = 'a-cell'; }
+                else if(stat === 'leave') { sym = 'ر'; cls = 'l-cell'; }
+                else if(stat === 'sick') { sym = 'ن'; cls = 's-cell'; }
+                bodyHTML += `<td class="${cls}">${sym}</td>`;
+            }
+            bodyHTML += "</tr>";
+        });
+        
+        body.innerHTML = bodyHTML || "<tr><td colspan='35'>معلومات پیدا نشول.</td></tr>";
+    } catch (e) { body.innerHTML = "تېروتنه: " + e.message; }
+}
+
+window.onload = loadStudents;
+</script>
+</body>
+</html>

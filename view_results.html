@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ټولګي پایلې - بابا هوتک لیسه</title>
+    <style>
+        :root { --primary: #4A90E2; --success: #2ecc71; --danger: #e74c3c; --warning: #f1c40f; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        .header { text-align: center; margin-bottom: 25px; }
+        .filter-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        select { flex: 1; padding: 10px; border-radius: 12px; border: 1.5px solid #ddd; outline: none; }
+
+        /* د نمرو لیست سټایل */
+        .result-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-radius: 15px; background: #fff; border: 1px solid #eee; margin-bottom: 10px; transition: 0.3s; }
+        .result-item:hover { transform: scale(1.02); }
+        
+        .rank { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+        .rank-1 { background: var(--warning); box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); } /* اول نمره */
+        .rank-normal { background: #95a5a6; }
+        
+        .student-name { flex: 1; margin-right: 15px; font-weight: bold; }
+        .score-badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; }
+        .pass { background: #e8f5e9; color: var(--success); }
+        .fail { background: #ffebee; color: var(--danger); }
+
+        .back-btn { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h3 style="margin:0; color: var(--primary);">🏆 د ټولګي د نمرو پایلې</h3>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">د نمرې په اساس د شاګردانو درجه بندي</p>
+    </div>
+
+    <div class="filter-box">
+        <select id="subjectFilter" onchange="loadClassResults()">
+            <option value="پښتو">پښتو</option>
+            <option value="ریاضي">ریاضي</option>
+            <option value="کیمیا">کیمیا</option>
+        </select>
+    </div>
+
+    <div id="resultsContainer">
+        </div>
+
+    <a href="teacher_dashboard.html" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // فایربیس تنظیمات
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function loadClassResults() {
+        const subject = document.getElementById('subjectFilter').value;
+        const container = document.getElementById('resultsContainer');
+        container.innerHTML = "<p style='text-align:center;'>د معلوماتو راوړل...</p>";
+
+        try {
+            const querySnapshot = await db.collection("studentMarks")
+                .where("subject", "==", subject)
+                .get();
+
+            let marksArray = [];
+            querySnapshot.forEach(doc => {
+                marksArray.push(doc.data());
+            });
+
+            // د نمرو په اساس ترتیب (له لوړ څخه کښته ته)
+            marksArray.sort((a, b) => b.mark - a.mark);
+
+            container.innerHTML = "";
+            if (marksArray.length === 0) {
+                container.innerHTML = "<p style='text-align:center; color:#999;'>د دې مضمون لپاره نمرې نه دي موندل شوي.</p>";
+                return;
+            }
+
+            marksArray.forEach((data, index) => {
+                const isPass = data.mark >= 40;
+                const rankClass = index === 0 ? 'rank-1' : 'rank-normal';
+                
+                container.innerHTML += `
+                    <div class="result-item">
+                        <div class="rank ${rankClass}">${index + 1}</div>
+                        <div class="student-name">${data.studentName}</div>
+                        <div class="score-badge ${isPass ? 'pass' : 'fail'}">
+                            ${data.mark}
+                        </div>
+                    </div>
+                `;
+            });
+
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = "تېروتنه رامنځته شوه.";
+        }
+    }
+
+    // لومړی ځل بارول
+    loadClassResults();
+</script>
+
+</body>
+</html>

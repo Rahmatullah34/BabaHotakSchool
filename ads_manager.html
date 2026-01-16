@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د اعلاناتو اداره</title>
+    <style>
+        :root { --primary: #fbc02d; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); padding: 20px; direction: rtl; text-align: center; }
+        .ad-container { max-width: 450px; margin: auto; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid var(--primary); }
+        .input-group { text-align: right; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; background: #fafafa; }
+        .btn-save { background: var(--primary); color: #000; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 17px; margin-top: 10px; }
+        #previewImg { width: 100%; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #ddd; }
+        .lock-screen { padding: 40px 20px; }
+    </style>
+</head>
+<body>
+
+<div class="ad-container">
+    <div id="lockArea" class="lock-screen">
+        <h2 style="color: #f39c12;">🔐 د امنیتي کوډ تایید</h2>
+        <p style="font-size: 13px; color: #7f8c8d;">تجارتي اعلانونه یوازې د عمومي اډمین لخوا اداره کیږي.</p>
+        <input type="password" id="adminPass" placeholder="امنیتي کوډ داخل کړئ" style="text-align: center;">
+        <button class="btn-save" onclick="unlock()">ورننوتل</button>
+    </div>
+
+    <div id="adminAuthArea" style="display: none;">
+        <h2>🚀 د نوي اعلان خپرول</h2>
+        <div class="input-group">
+            <label>د اعلان سرلیک:</label>
+            <input type="text" id="adTitle">
+        </div>
+        <div class="input-group">
+            <label>د اعلان متن:</label>
+            <textarea id="adText" rows="3"></textarea>
+        </div>
+        <div class="input-group">
+            <label>د عکس لینک (URL):</label>
+            <input type="text" id="adImg" oninput="previewImage()">
+            <img id="previewImg" src="">
+        </div>
+        <div class="input-group">
+            <label>د ویب پاڼې یا واټساپ لینک:</label>
+            <input type="text" id="adLink">
+        </div>
+        <button class="btn-save" id="saveBtn" onclick="saveAd()">✅ اعلان اوس خپور کړه</button>
+        <p id="status" style="margin-top:10px; font-size:12px;"></p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    projectId: "babahotakschool",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ۱. د پټنوم په واسطه خلاصول
+function unlock() {
+    const pass = document.getElementById('adminPass').value;
+    // ستا پټنوم دلته دی:
+    if (pass === "Rahmat145") {
+        document.getElementById('lockArea').style.display = 'none';
+        document.getElementById('adminAuthArea').style.display = 'block';
+        loadOldData();
+    } else {
+        alert("غلط کوډ! یوازې اډمین اجازه لري.");
+    }
+}
+
+function previewImage() {
+    const url = document.getElementById('adImg').value;
+    const img = document.getElementById('previewImg');
+    if(url) { img.src = url; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+}
+
+async function saveAd() {
+    const title = document.getElementById('adTitle').value;
+    const text = document.getElementById('adText').value;
+    const img = document.getElementById('adImg').value;
+    const link = document.getElementById('adLink').value;
+
+    if (!text) return alert("متن ولیکئ!");
+
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerText = "د خپرېدو په حال کې...";
+
+    try {
+        await db.collection("systemSettings").doc("commercialAd").set({
+            title: title, text: text, imageUrl: img, actionLink: link || "#", updatedAt: new Date()
+        });
+        document.getElementById('status').innerText = "اعلان په بریالیتوب سره خپور شو! ✅";
+        document.getElementById('status').style.color = "green";
+    } catch (e) { alert(e.message); }
+    finally { btn.disabled = false; btn.innerText = "✅ اعلان اوس خپور کړه"; }
+}
+
+async function loadOldData() {
+    const doc = await db.collection("systemSettings").doc("commercialAd").get();
+    if(doc.exists) {
+        const d = doc.data();
+        document.getElementById('adTitle').value = d.title;
+        document.getElementById('adText').value = d.text;
+        document.getElementById('adImg').value = d.imageUrl;
+        document.getElementById('adLink').value = d.actionLink;
+        previewImage();
+    }
+}
+</script>
+</body>
+</html>

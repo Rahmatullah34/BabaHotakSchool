@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>میاشتنی پلان - بابا هوتک لیسه</title>
+    <style>
+        :root { --primary: #4A90E2; --bg: #f8fafc; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; color: var(--text); }
+        
+        .container { max-width: 500px; margin: auto; }
+        
+        .header { background: white; padding: 20px; border-radius: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .header h2 { color: var(--primary); margin: 0; font-size: 20px; }
+
+        /* د میاشتو لیست */
+        .month-list { display: flex; flex-direction: column; gap: 10px; }
+        .month-card { 
+            background: white; 
+            padding: 15px 20px; 
+            border-radius: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            border: 1px solid #f0f0f0;
+            transition: 0.3s;
+        }
+        .month-card:hover { border-color: var(--primary); transform: translateX(-5px); }
+        
+        .m-info { display: flex; align-items: center; gap: 15px; }
+        .m-icon { background: #eef5ff; color: var(--primary); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .m-name { font-weight: bold; font-size: 16px; }
+        .m-status { font-size: 11px; color: #95a5a6; }
+
+        .btn-view { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        .back-btn { display: block; text-align: center; margin-top: 25px; text-decoration: none; color: #7f8c8d; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>📅 میاشتنی تدریسي پلان</h2>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">د هرې میاشتې د موضوعاتو وېش</p>
+    </div>
+
+    <div class="month-list" id="monthContainer">
+        </div>
+
+    <a href="teacher_dashboard.html" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script>
+    // د میاشتو لیست (د افغانستان د تعلیمي کال مطابق)
+    const months = [
+        { name: "حمل", status: "جریان لري" },
+        { name: "ثور", status: "انتظار" },
+        { name: "جوزا", status: "انتظار" },
+        { name: "سرطان", status: "انتظار" },
+        { name: "اسد", status: "انتظار" },
+        { name: "سنبله", status: "انتظار" },
+        { name: "میزان", status: "انتظار" },
+        { name: "عقرب", status: "انتظار" }
+    ];
+
+    const container = document.getElementById('monthContainer');
+
+    months.forEach((m, index) => {
+        const card = document.createElement('div');
+        card.className = 'month-card';
+        card.innerHTML = `
+            <div class="m-info">
+                <div class="m-icon">${index + 1}</div>
+                <div>
+                    <div class="m-name">${m.name}</div>
+                    <div class="m-status">${m.status}</div>
+                </div>
+            </div>
+            <button class="btn-view" onclick="openMonth('${m.name}')">پلان لیدل</button>
+        `;
+        container.appendChild(card);
+    });
+
+    function openMonth(monthName) {
+        alert("د " + monthName + " میاشتې تفصیلات په پروسس کې دي...");
+        // دلته کولی شئ یوې بلې پاڼې ته لینک ورکړئ
+    }
+</script>
+
+</body>
+</html>

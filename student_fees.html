@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مالي حالت - بابا هوتک لیسه</title>
+    <style>
+        :root { --success: #27ae60; --bg: #f8fafc; --warning: #f39c12; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        
+        .container { max-width: 500px; margin: auto; }
+        .header { background: white; padding: 20px; border-radius: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+        /* مالي خلاصه کارتونه */
+        .fee-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .fee-card { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .fee-card h4 { margin: 0; font-size: 12px; color: #7f8c8d; }
+        .fee-card p { margin: 10px 0 0; font-size: 18px; font-weight: bold; }
+
+        /* د تادیاتو تاریخچه */
+        .history-section { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 2px 15px rgba(0,0,0,0.04); }
+        .history-title { font-size: 16px; font-weight: bold; color: var(--success); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        .transaction { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        .tr-info { display: flex; flex-direction: column; }
+        .tr-date { font-size: 10px; color: #95a5a6; }
+        .tr-amount { font-weight: bold; color: var(--success); }
+        .tr-status { font-size: 11px; padding: 3px 8px; border-radius: 5px; background: #e8f5e9; color: var(--success); }
+
+        .back-btn { display: block; text-align: center; margin-top: 25px; text-decoration: none; color: #7f8c8d; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 style="margin:0; color: var(--success);">💰 مالي وضعیت</h2>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">ستاسو د فیسونو او تادیاتو لیست</p>
+    </div>
+
+    <div class="fee-summary">
+        <div class="fee-card" style="border-bottom: 4px solid var(--success);">
+            <h4>تادیه شوې مجموعه</h4>
+            <p style="color: var(--success);">۱۲۵۰۰ افغانۍ</p>
+        </div>
+        <div class="fee-card" style="border-bottom: 4px solid var(--danger);">
+            <h4>پاتې پور (باقي)</h4>
+            <p style="color: var(--danger);">۲۰۰۰ افغانۍ</p>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <div class="history-title">📜 د تادیاتو تاریخچه</div>
+        
+        <div id="transactionsList">
+            <div class="transaction">
+                <div class="tr-info">
+                    <span style="font-size: 14px; font-weight: 500;">د قوس میاشتې فیس</span>
+                    <span class="tr-date">۱۴۰۴/۰۹/۱۰</span>
+                </div>
+                <div style="text-align: left;">
+                    <div class="tr-amount">۱۵۰۰ افغانۍ</div>
+                    <span class="tr-status">تایید شو</span>
+                </div>
+            </div>
+
+            <div class="transaction">
+                <div class="tr-info">
+                    <span style="font-size: 14px; font-weight: 500;">د لړم میاشتې فیس</span>
+                    <span class="tr-date">۱۴۰۴/۰۸/۰۵</span>
+                </div>
+                <div style="text-align: left;">
+                    <div class="tr-amount">۱۵۰۰ افغانۍ</div>
+                    <span class="tr-status">تایید شو</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="student_dashboard.html" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script>
+    // په راتلونکي کې کولی شئ دا ډیټا له Firestore څخه په متحرک ډول راوباسئ
+</script>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>د کارتونو چاپ - بابا هوتک نمبر ۲</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root { --main-blue: #004d99; --text-black: #000; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; direction: rtl; }
+
+        /* د چاپ تنظیمات */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; margin: 0; }
+            #cardsContainer { 
+                display: grid; 
+                grid-template-columns: 1fr 1fr; 
+                gap: 5mm; 
+                padding: 10mm; 
+            }
+            .card-wrapper { page-break-inside: avoid; margin-bottom: 10mm; border: none; }
+        }
+
+        #cardsContainer { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+
+        /* لومړی مخ */
+        .id-card-front {
+            width: 85.6mm; height: 53.98mm; background: white; border: 1.5px solid #333;
+            border-radius: 8px; position: relative; overflow: hidden;
+        }
+        .header { background: var(--main-blue); color: white; padding: 8px; text-align: center; border-bottom: 2px solid #d4af37; }
+        .header h2 { margin: 0; font-size: 13px; font-weight: bold; }
+        
+        .main-content { display: flex; padding: 10px; gap: 10px; height: calc(100% - 50px); }
+        .photo-frame { width: 75px; height: 90px; border: 2px solid var(--main-blue); border-radius: 4px; object-fit: cover; }
+        
+        .info-area { flex: 1; font-size: 12px; line-height: 1.5; color: var(--text-black); }
+        .info-row { display: flex; border-bottom: 0.5px solid #eee; margin-bottom: 3px; }
+        .info-label { font-weight: bold; width: 70px; color: var(--main-blue); }
+
+        /* شاتنی مخ */
+        .id-card-back {
+            width: 85.6mm; height: 53.98mm; background: #fdfdfd; border: 1.5px solid #333;
+            border-radius: 8px; padding: 10px; position: relative;
+        }
+        .rules-title { font-weight: bold; font-size: 11px; margin-bottom: 5px; color: var(--main-blue); border-bottom: 1px solid #ddd; }
+        .rules-text { font-size: 9.5px; text-align: justify; line-height: 1.4; margin: 0; }
+        .footer-info { position: absolute; bottom: 8px; right: 10px; font-size: 8.5px; line-height: 1.3; }
+        .qr-pos { position: absolute; bottom: 8px; left: 8px; background: white; padding: 2px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="no-print" style="margin-bottom: 30px; text-align: center;">
+    <button onclick="window.print()" style="padding: 15px 40px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">🖨️ د کارتونو چاپول (A4 کاغذ)</button>
+</div>
+
+<div id="cardsContainer"></div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function loadCards() {
+    const container = document.getElementById('cardsContainer');
+    db.collection("babaStudents").onSnapshot(snapshot => {
+        container.innerHTML = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const asas = data.asas || "---"; 
+            const name = data.name || "---"; 
+            const father = data.father || "---"; 
+            const grade = data.grade || "---"; 
+
+            const cardHTML = `
+            <div class="card-wrapper" style="display: flex; gap: 15px;">
+                <div class="id-card-front">
+                    <div class="header">
+                        <h2>بابا هوتک دویم نمبر عالي لیسه</h2>
+                    </div>
+                    <div class="main-content">
+                        <img src="${data.photoUrl || 'student.png'}" class="photo-frame" onerror="this.src='https://via.placeholder.com/75x90'">
+                        <div class="info-area">
+                            <div class="info-row"><span class="info-label">نوم:</span><span>${name}</span></div>
+                            <div class="info-row"><span class="info-label">پلار نوم:</span><span>${father}</span></div>
+                            <div class="info-row"><span class="info-label">ټولګی:</span><span>${grade}</span></div>
+                            <div class="info-row"><span class="info-label">اساس نمبر:</span><span style="font-weight:bold;">${asas}</span></div>
+                            <div class="info-row"><span class="info-label">وینه:</span><span>${data.bloodType || '+A'}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="id-card-back">
+                    <div class="rules-title">قوانین او لارښوونې:</div>
+                    <p class="rules-text">
+                        دا کارت د ښوونځي رسمي ملکیت دی. د ورکېدو په صورت کې ژر تر ژره ادارې ته خبر ورکړئ. 
+                        دا کارت یوازې د روان تعلیمي کال لپاره باوري دی. د کارت له بیا جوړولو څخه قانوني جرم دی.
+                    </p>
+                    <div class="footer-info">
+                        <strong>پته:</strong> زابل، شاه جوی بازار <br>
+                        <strong>اړیکه:</strong> 0700777746 <br>
+                        <strong>ایمیل:</strong> rahmatalmi145@gmail.com
+                    </div>
+                    <div class="qr-pos" id="qr-${doc.id}"></div>
+                </div>
+            </div>`;
+            container.innerHTML += cardHTML;
+
+            setTimeout(() => {
+                new QRCode(document.getElementById(`qr-${doc.id}`), { text: asas.toString(), width: 45, height: 45 });
+            }, 300);
+        });
+    });
+}
+window.onload = loadCards;
+</script>
+</body>
+</html>

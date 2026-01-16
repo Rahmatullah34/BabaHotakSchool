@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>د ښوونکي چټ - بابا هوتک لیسه</title>
+  <style>
+    :root {
+      --primary: #3498db;
+      --teacher: #e74c3c;
+      --admin: #2ecc71;
+      --bg: #f5f7fa;
+    }
+    
+    body { 
+      font-family: 'Segoe UI', Tahoma; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0; 
+      padding: 0; 
+      direction: rtl; 
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .chat-container {
+      width: 95%;
+      max-width: 500px;
+      height: 90vh;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* سربرخه */
+    .chat-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #2980b9 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+    
+    .back-btn {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* د پیغامونو سیمه */
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    /* پیغام سټایلونه */
+    .msg {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      line-height: 1.5;
+      word-wrap: break-word;
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .msg-me {
+      align-self: flex-end;
+      background: var(--teacher);
+      color: white;
+      border-bottom-right-radius: 5px;
+      box-shadow: 0 2px 5px rgba(231, 76, 60, 0.3);
+    }
+    
+    .msg-admin {
+      align-self: flex-start;
+      background: var(--admin);
+      color: white;
+      border-bottom-left-radius: 5px;
+      box-shadow: 0 2px 5px rgba(46, 204, 113, 0.3);
+    }
+    
+    .msg-group {
+      align-self: center;
+      background: #f1c40f;
+      color: #333;
+      max-width: 90%;
+      font-size: 13px;
+      padding: 10px 15px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    /* د استولو معلومات */
+    .sender-name {
+      font-size: 11px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+    
+    .msg-time {
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+      display: block;
+      text-align: left;
+      margin-top: 5px;
+    }
+    
+    /* د انپټ سیمه */
+    .input-area {
+      padding: 15px;
+      background: white;
+      display: flex;
+      gap: 10px;
+      border-top: 1px solid #e1e8ed;
+      align-items: center;
+    }
+    
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e1e8ed;
+      border-radius: 12px;
+      outline: none;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+    
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* د فایل ایکون */
+    .file-btn {
+      background: #9b59b6;
+      padding: 12px;
+      border-radius: 12px;
+    }
+    
+    /* د چټ ټایپ سلیکټر */
+    .chat-type-selector {
+      display: flex;
+      background: #ecf0f1;
+      border-radius: 12px;
+      padding: 5px;
+      margin: 0 20px 15px 20px;
+    }
+    
+    .chat-type-btn {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .chat-type-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* خالي حالت */
+    .empty-state {
+      text-align: center;
+      color: #95a5a6;
+      padding: 40px 20px;
+    }
+    
+    .empty-state-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    /* د فایل لنډیز */
+    .file-summary {
+      background: rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <!-- سربرخه -->
+  <div class="chat-header">
+    <button class="back-btn" onclick="goBack()">⬅️ شاته</button>
+    <h3 style="margin:0; font-size: 18px;">💬 د ښوونکي چټ</h3>
+    <p style="margin:5px 0 0; font-size: 12px; opacity: 0.9;" id="teacherName">استاد: ...</p>
+  </div>
+  
+  <!-- د چټ ډول ټاکونکی -->
+  <div class="chat-type-selector">
+    <div class="chat-type-btn active" id="groupChatBtn" onclick="switchChatType('group')">
+      📢 عمومي
+    </div>
+    <div class="chat-type-btn" id="privateChatBtn" onclick="switchChatType('private')">
+      👤 مدیر سره
+    </div>
+  </div>
+  
+  <!-- د پیغامونو سیمه -->
+  <div class="messages-area" id="chatBox">
+    <div class="empty-state">
+      <span class="empty-state-icon">💬</span>
+      <p>پیغامونه راوستل کېږي...</p>
+    </div>
+  </div>
+  
+  <!-- د انپټ سیمه -->
+  <div class="input-area">
+    <input type="text" id="msgInput" placeholder="پیغام ولیکئ..." onkeypress="handleEnter(event)">
+    <label for="teacherFileInput" style="cursor:pointer;">
+      <button class="file-btn">📎</button>
+    </label>
+    <input type="file" id="teacherFileInput" style="display:none" onchange="sendFile(event)">
+    <button id="sendTeacherBtn" onclick="sendTeacherMessage()">📤</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+
+<script>
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+  };
+  
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const storage = firebase.storage();
+
+  let currentChatType = 'group'; // 'group' یا 'private'
+  let teacherId = null;
+  let teacherName = "ښوونکی";
+  
+  // ==================== پیل کول ====================
+  window.onload = function() {
+    // د ښوونکي معلومات ترلاسه کول
+    teacherId = localStorage.getItem('userId');
+    teacherName = localStorage.getItem('userName') || "ښوونکی";
+    
+    if (!teacherId) {
+      alert("تاسو ننوتل نه یاست!");
+      window.location.href = "login.html";
+      return;
+    }
+    
+    // د نوم تازه کول
+    document.getElementById('teacherName').innerText = `استاد: ${teacherName}`;
+    
+    // د پیغامونو راوستل
+    loadTeacherChat();
+    
+    // د نوو پیغامونو څارنه
+    checkForNewMessages();
+  };
+  
+  // ==================== د چټ ډول بدلول ====================
+  function switchChatType(type) {
+    currentChatType = type;
+    
+    // د بټنونو فعال حالت
+    document.getElementById('groupChatBtn').classList.toggle('active', type === 'group');
+    document.getElementById('privateChatBtn').classList.toggle('active', type === 'private');
+    
+    // د پیغامونو بیا راوستل
+    loadTeacherChat();
+  }
+  
+  // ==================== د ښوونکي پیغامونو راوستل ====================
+  function loadTeacherChat() {
+    const chatBox = document.getElementById('chatBox');
+    chatBox.innerHTML = '<div class="empty-state"><span class="empty-state-icon">⏳</span><p>پیغامونه راوستل کېږي...</p></div>';
+    
+    let query;
+    
+    if (currentChatType === 'group') {
+      // د ګروپ پیغامونه
+      query = db.collection("schoolChat")
+        .where("receiverId", "==", "admin-group")
+        .orderBy("timestamp", "asc");
+    } else {
+      // د خصوصي پیغامونه
+      query = db.collection("schoolChat")
+        .where(function() {
+          return firebase.firestore.FieldPath.documentId() in [
+            ["senderId", "==", teacherId],
+            ["receiverId", "==", teacherId]
+          ];
+        })
+        .orderBy("timestamp", "asc");
+    }
+    
+    query.onSnapshot(snapshot => {
+      chatBox.innerHTML = "";
+      
+      if (snapshot.empty) {
+        chatBox.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-state-icon">💬</span>
+            <p>لا تر اوسه پیغامونه نشته.</p>
+            <p style="font-size:12px;">لومړی پیغام ولیکئ!</p>
+          </div>
+        `;
+        return;
+      }
+      
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+        displayTeacherMessage(msg);
+      });
+      
+      chatBox.scrollTop = chatBox.scrollHeight;
+      
+      // د پیغامونو د لیدلو نښه کول
+      markTeacherMessagesAsRead();
+    }, error => {
+      console.error("د پیغامونو راوستلو ستونزه:", error);
+      chatBox.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-state-icon">❌</span>
+          <p>د پیغامونو په راوستلو کې ستونزه راغله.</p>
+          <button onclick="loadTeacherChat()" style="margin-top:10px; padding:8px 15px;">بیا هڅه وکړئ</button>
+        </div>
+      `;
+    });
+  }
+  
+  // ==================== د ښوونکي پیغام ښودل ====================
+  function displayTeacherMessage(msg) {
+    const chatBox = document.getElementById('chatBox');
+    const isMyMessage = msg.senderId === teacherId;
+    const isGroupMessage = msg.receiverId === "admin-group";
+    
+    const time = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString('ps-AF', {
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : "نوي";
+    
+    let messageClass = '';
+    let senderName = '';
+    
+    if (isGroupMessage && currentChatType === 'group') {
+      messageClass = 'msg-group';
+      senderName = msg.senderName || (isMyMessage ? 'تاسو' : 'مدیر');
+    } else if (isMyMessage) {
+      messageClass = 'msg-me';
+      senderName = 'تاسو';
+    } else {
+      messageClass = 'msg-admin';
+      senderName = msg.senderName || 'مدیر';
+    }
+    
+    let messageContent = '';
+    
+    if (msg.text) {
+      messageContent = msg.text;
+    } else if (msg.fileUrl) {
+      messageContent = `
+        <div>📎 فایل</div>
+        <div class="file-summary">
+          <span>${msg.fileName || 'فایل'}</span>
+          <a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">
+            لیدل
+          </a>
+        </div>
+      `;
+    }
+    
+    // که ځواب وي
+    let replySection = '';
+    if (msg.replyText) {
+      replySection = `
+        <div style="background:rgba(255,255,255,0.2); padding:5px 10px; border-radius:8px; margin-bottom:5px; font-size:12px;">
+          ↪️ ${msg.replyText.substring(0, 50)}${msg.replyText.length > 50 ? '...' : ''}
+        </div>
+      `;
+    }
+    
+    const messageHTML = `
+      <div class="msg ${messageClass}">
+        <span class="sender-name">${senderName}</span>
+        ${replySection}
+        ${messageContent}
+        <span class="msg-time">${time}</span>
+      </div>
+    `;
+    
+    chatBox.innerHTML += messageHTML;
+  }
+  
+  // ==================== د ښوونکي پیغام استول ====================
+  async function sendTeacherMessage() {
+    const text = document.getElementById('msgInput').value.trim();
+    const fileInput = document.getElementById('teacherFileInput');
+    
+    if (!text && fileInput.files.length === 0) {
+      alert("مهرباني وکړئ پیغام یا فایل داخل کړئ!");
+      return;
+    }
+    
+    const sendBtn = document.getElementById('sendTeacherBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = "⏳";
+    
+    try {
+      let fileUrl = '';
+      let fileName = '';
+      
+      // که فایل وي
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const storageRef = storage.ref(`teacher-files/${teacherId}/${Date.now()}_${file.name}`);
+        const uploadTask = await storageRef.put(file);
+        fileUrl = await uploadTask.ref.getDownloadURL();
+        fileName = file.name;
+        fileInput.value = '';
+      }
+      
+      const messageData = {
+        senderId: teacherId,
+        senderName: teacherName,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        readBy: [teacherId],
+        chatType: currentChatType,
+        teacherId: teacherId
+      };
+      
+      if (currentChatType === 'group') {
+        messageData.receiverId = "admin-group";
+        messageData.deliveredTo = ["admin", teacherId];
+      } else {
+        messageData.receiverId = "admin";
+        messageData.deliveredTo = ["admin"];
+      }
+      
+      if (fileUrl) {
+        messageData.fileUrl = fileUrl;
+        messageData.fileName = fileName;
+      }
+      
+      await db.collection("schoolChat").add(messageData);
+      
+      // د انپټ پاکول
+      document.getElementById('msgInput').value = '';
+      
+    } catch (error) {
+      console.error("د پیغام ستونزه:", error);
+      alert("پیغام ونه استول شو: " + error.message);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = "📤";
+    }
+  }
+  
+  // ==================== د فایل استول ====================
+  async function sendFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const sendBtn = document.getElementById('sendTeacherBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = "📎";
+    
+    try {
+      await sendTeacherMessage();
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = "📤";
+    }
+  }
+  
+  // ==================== د Enter کلید ملاتړ ====================
+  function handleEnter(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendTeacherMessage();
+    }
+  }
+  
+  // ==================== د نویو پیغامونو څارنه ====================
+  function checkForNewMessages() {
+    // په پسې کې د نوټیفیکیشن لپاره کارول کېږي
+  }
+  
+  // ==================== د پیغامونو د لیدلو نښه کول ====================
+  async function markTeacherMessagesAsRead() {
+    if (!teacherId) return;
+    
+    try {
+      const snapshot = await db.collection("schoolChat")
+        .where("receiverId", "==", teacherId)
+        .where("readBy", "not-in", [[teacherId]])
+        .get();
+      
+      const batch = db.batch();
+      snapshot.forEach(doc => {
+        const readBy = doc.data().readBy || [];
+        if (!readBy.includes(teacherId)) {
+          readBy.push(teacherId);
+          batch.update(doc.ref, { readBy: readBy });
+        }
+      });
+      
+      if (snapshot.size > 0) {
+        await batch.commit();
+      }
+    } catch (error) {
+      console.error("د لیدلو نښې ستونزه:", error);
+    }
+  }
+  
+  // ==================== د شاته تګ ====================
+  function goBack() {
+    window.location.href = "teacher_dashboard.html";
+  }
+</script>
+
+</body>
+</html>

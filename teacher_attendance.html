@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ښوونکو هوښیاره حاضري</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .attendance-card { background: white; border-radius: 20px; padding: 20px; margin: 10px auto; max-width: 750px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        /* ۱. مجموعي حالت (Summary Bar) */
+        .summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; text-align: center; background: #f8f9fa; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        .summary-item { font-size: 12px; font-weight: bold; }
+        .summary-item span { display: block; font-size: 18px; margin-top: 5px; }
+        
+        /* ۲. یو کلیک بټنه */
+        .bulk-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .bulk-btn { background: #34495e; color: white; border: none; padding: 8px 18px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s; }
+        .bulk-btn:hover { background: #2c3e50; }
+
+        /* راپور بټن سټایل */
+        .report-link { background: #8e44ad; color: white; text-decoration: none; padding: 8px 15px; border-radius: 10px; font-size: 13px; font-weight: bold; transition: 0.3s; }
+        .report-link:hover { background: #732d91; opacity: 0.9; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #3498db; color: white; padding: 12px; border-radius: 5px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        
+        .status-select { padding: 6px; border-radius: 8px; border: 1px solid #ddd; width: 100%; outline: none; }
+        .late-input { width: 60px; padding: 6px; border-radius: 8px; border: 1px solid #ddd; text-align: center; }
+        .remarks-input { width: 100%; padding: 6px; border-radius: 8px; border: 1px solid #ddd; outline: none; }
+        
+        .row-late { background-color: #fff9e6 !important; }
+        .row-absent { background-color: #ffeded !important; }
+        .row-leave { background-color: #f0f7ff !important; }
+        
+        .save-btn { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; margin-top: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.2); }
+        .save-btn:hover { background: #219150; }
+        .back-btn { background: #95a5a6; color: white; padding: 8px 15px; border-radius: 10px; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="attendance-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="admin_dashboard.html" class="back-btn">⬅️ شاته</a>
+        <h3 style="margin:0; color: #2c3e50;">د ښوونکو مسلکي حاضري</h3>
+        <a href="teacherattendance_report.html" class="report-link">📊 میاشتنی راپور</a>
+    </div>
+
+    <div class="summary-bar">
+        <div class="summary-item" style="color:#3498db;">ټول ښوونکي<span id="totalT">0</span></div>
+        <div class="summary-item" style="color:#27ae60;">حاضر<span id="presentT">0</span></div>
+        <div class="summary-item" style="color:#e74c3c;">غیرحاضر<span id="absentT">0</span></div>
+        <div class="summary-item" style="color:#f39c12;">ضایع وخت (دقیقه)<span id="totalLateMin">0</span></div>
+    </div>
+
+    <div class="bulk-action">
+        <button class="bulk-btn" onclick="markAllPresent()">✅ ټول حاضر کړه</button>
+        <span style="font-size: 12px; color: #7f8c8d;">نېټه: <b id="todayDate"></b></span>
+    </div>
+
+    <div id="loading" style="text-align:center; padding: 20px;">د معلوماتو راوړل...</div>
+
+    <table id="mainTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>د ښوونکي نوم</th>
+                <th>حالت</th>
+                <th>ځنډ (دقیقه)</th>
+                <th>ملاحظات</th>
+            </tr>
+        </thead>
+        <tbody id="teacherList"></tbody>
+    </table>
+
+    <button class="save-btn" onclick="submitAttendance()">💾 حاضري خوندي کړه</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById('todayDate').innerText = new Date().toLocaleDateString('fa-AF');
+
+    async function loadTeachers() {
+        const tbody = document.getElementById('teacherList');
+        try {
+            const snapshot = await db.collection("babaTeachers").get();
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('mainTable').style.display = 'table';
+            document.getElementById('totalT').innerText = snapshot.size;
+            
+            snapshot.forEach(doc => {
+                const t = doc.data();
+                tbody.innerHTML += `
+                    <tr class="teacher-row" data-id="${doc.id}" data-name="${t.name}">
+                        <td style="text-align:right;"><b>${t.name}</b></td>
+                        <td>
+                            <select class="status-select" onchange="styleRow(this); updateSummary();">
+                                <option value="present">حاضر</option>
+                                <option value="absent">غیرحاضر</option>
+                                <option value="leave">رخصت</option>
+                                <option value="late">ناوخته</option>
+                            </select>
+                        </td>
+                        <td><input type="number" class="late-input" value="0" oninput="updateSummary()"></td>
+                        <td><input type="text" class="remarks-input" placeholder="..."></td>
+                    </tr>`;
+            });
+            updateSummary();
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
+    function styleRow(select) {
+        const row = select.closest('tr');
+        row.classList.remove('row-late', 'row-absent', 'row-leave');
+        if(select.value === 'late') row.classList.add('row-late');
+        if(select.value === 'absent') row.classList.add('row-absent');
+        if(select.value === 'leave') row.classList.add('row-leave');
+    }
+
+    function markAllPresent() {
+        document.querySelectorAll('.status-select').forEach(s => {
+            s.value = 'present';
+            styleRow(s);
+        });
+        updateSummary();
+    }
+
+    function updateSummary() {
+        let p = 0, a = 0, totalLate = 0;
+        document.querySelectorAll('.teacher-row').forEach(row => {
+            const status = row.querySelector('.status-select').value;
+            const late = parseInt(row.querySelector('.late-input').value) || 0;
+            if(status === 'present' || status === 'late') p++;
+            if(status === 'absent') a++;
+            totalLate += late;
+        });
+        document.getElementById('presentT').innerText = p;
+        document.getElementById('absentT').innerText = a;
+        document.getElementById('totalLateMin').innerText = totalLate;
+    }
+
+    async function submitAttendance() {
+        const rows = document.querySelectorAll('.teacher-row');
+        const date = new Date().toLocaleDateString('fa-AF');
+        const time = new Date().toLocaleTimeString('ps-AF');
+
+        if(!confirm("ایا غواړئ نننۍ حاضري ثبت کړئ؟")) return;
+
+        try {
+            for (let row of rows) {
+                const status = row.querySelector('.status-select').value;
+                const late = row.querySelector('.late-input').value || 0;
+                const rem = row.querySelector('.remarks-input').value || "";
+
+                await db.collection("teacherAttendance").add({
+                    teacherId: row.dataset.id,
+                    name: row.dataset.name,
+                    status: status,
+                    lateMinutes: parseInt(late),
+                    remarks: rem,
+                    date: date,
+                    exactTime: time,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+            alert("✅ حاضري په بریالیتوب سره ثبت شوه!");
+            window.location.href = 'admin_dashboard.html';
+        } catch (e) { alert("تېروتنه: " + e.message); }
+    }
+
+    loadTeachers();
+</script>
+</body>
+</html>

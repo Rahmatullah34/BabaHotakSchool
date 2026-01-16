@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د زده کوونکي ډشبورډ - بابا هوتک لیسه</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --success: #27ae60; --bg: #f0f4f8; --text: #2c3e50; --primary: #fbc02d; --blue: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; color: var(--text); }
+        
+        .top-card { background: white; padding: 20px; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 5px solid var(--success); }
+        .p-info { display: flex; align-items: center; gap: 15px; }
+        .p-info img { width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--success); object-fit: cover; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .s-card { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .s-card h3 { margin: 0; font-size: 18px; color: var(--success); transition: 0.3s; }
+        .s-card p { margin: 5px 0 0; font-size: 10px; color: #7f8c8d; font-weight: bold; }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+        .m-btn { background: white; padding: 15px 5px; border-radius: 20px; text-align: center; text-decoration: none; color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #f0f0f0; transition: 0.3s; }
+        .m-btn:active { transform: scale(0.95); background: #f9f9f9; }
+        .m-btn i { font-size: 26px; font-style: normal; }
+        .m-btn span { font-size: 11px; font-weight: 600; }
+
+        /* تجارتي اعلانونه */
+        .my-commercial-banner {
+            background: white; padding: 15px; border-radius: 20px; margin: 15px 0;
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid var(--primary); cursor: pointer;
+        }
+        .my-commercial-banner img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 10px; display: none; }
+        .ad-tag { font-size: 10px; background: var(--primary); color: black; display: inline-block; padding: 2px 10px; border-radius: 6px; font-weight: bold; margin-bottom: 8px; }
+
+        /* اداري خبرتیا */
+        .notice-box {
+            background: #fff; border-right: 6px solid var(--blue); padding: 15px;
+            border-radius: 12px; margin: 15px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .n-header { color: var(--blue); font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="top-card">
+    <div class="p-info">
+        <img id="userPhoto" src="https://via.placeholder.com/65" alt="زده کوونکی">
+        <div>
+            <h3 id="userName" style="margin:0; font-size: 17px;">لوډ کېږي...</h3>
+            <span id="userClass" style="font-size:12px; color:#7f8c8d;">ټولګی: --</span>
+        </div>
+    </div>
+    <button onclick="logout()" style="background:#fff1f0; color:#ff4d4f; border:none; padding:8px 12px; border-radius:10px; font-weight:bold; cursor:pointer;">وتل</button>
+</div>
+
+<div class="stats-row">
+    <div class="s-card"><h3 id="attendanceRate">0%</h3><p>زما حاضري</p></div>
+    <div class="s-card"><h3>۱۴</h3><p>مضامین</p></div>
+    <div class="s-card"><h3>A</h3><p>درجه</p></div>
+</div>
+
+<div class="menu-grid">
+    <a href="student_results.html" class="m-btn"><i>📜</i><span>زما نمرې</span></a>
+    <a href="student_attendance.html" class="m-btn"><i>✅</i><span>حاضري</span></a>
+    <a href="student_chat.html" class="m-btn"><i>💬</i><span>چټ</span></a>
+    <a href="student_homework.html" class="m-btn"><i>📚</i><span>کورنۍ دنده</span></a>
+    <a href="student_timetable.html" class="m-btn"><i>📅</i><span>مهالوېش</span></a>
+    <a href="student_library.html" class="m-btn"><i>📖</i><span>کتابتون</span></a>
+    <a href="student_fees.html" class="m-btn"><i>💰</i><span>مالي حالت</span></a>
+    <a href="student_profile.html" class="m-btn"><i>👤</i><span>پروفایل</span></a>
+    <a href="school_news.html" class="m-btn"><i>📢</i><span>خبرتیاوې</span></a>
+</div>
+
+<div class="my-commercial-banner" id="commercialAdBox" onclick="openAdLink()">
+    <div class="ad-tag">💰 سپانسر شوی</div>
+    <img id="ad-image" src="" alt="AD">
+    <span id="ad-title-text" style="font-weight:bold; display:block; color:#d35400;">...</span>
+    <p id="ad-display-text" style="font-size:13px; margin:5px 0;">په انتظار کې...</p>
+</div>
+
+<div class="notice-box" id="schoolNoticeBox">
+    <div class="n-header">📢 عامه اداري خبرتیا</div>
+    <p id="s-display-text" style="margin:0; font-size:13px; color:#444;">خبرتیاوې دلته لوډ کېږي...</p>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const studentId = localStorage.getItem('userId'); 
+    let currentAdLink = "#";
+
+    async function loadStudentData() {
+        if(!studentId) { window.location.href = 'login.html'; return; }
+        
+        try {
+            // ۱. د شاګرد پروفایل
+            const doc = await db.collection("babaStudents").doc(studentId).get();
+            if (doc.exists) {
+                const d = doc.data();
+                document.getElementById('userName').innerText = d.name;
+                document.getElementById('userClass').innerText = `ټولګی: ${d.grade} (${d.section})`;
+                if(d.photo) document.getElementById('userPhoto').src = d.photo;
+            }
+            
+            // د نورو برخو لوډول
+            loadSystemNotices();
+            watchAttendance(); // د حاضري ریال ټایم سیسټم
+
+        } catch (e) { console.error(e); }
+    }
+
+    // ۲. د حاضري حساب (سوب او ناسوب)
+    function watchAttendance() {
+        db.collection("babaAttendance")
+            .where("studentId", "==", studentId)
+            .onSnapshot(snapshot => {
+                let totalDays = snapshot.size;
+                let presentDays = 0;
+
+                snapshot.forEach(doc => {
+                    const status = doc.data().status;
+                    if(status === "سوب") {
+                        presentDays++;
+                    }
+                });
+
+                const rateElement = document.getElementById('attendanceRate');
+                if (totalDays > 0) {
+                    const percentage = Math.round((presentDays / totalDays) * 100);
+                    rateElement.innerText = percentage + "%";
+                    rateElement.style.color = percentage < 75 ? "#e74c3c" : "#27ae60";
+                } else {
+                    rateElement.innerText = "0%";
+                }
+            });
+    }
+
+    // ۳. اعلانونه او اداري خبرتیاوې
+    function loadSystemNotices() {
+        db.collection("systemSettings").doc("commercialAd").onSnapshot(doc => {
+            if(doc.exists) {
+                const d = doc.data();
+                document.getElementById('ad-title-text').innerText = d.title || "";
+                document.getElementById('ad-display-text').innerText = d.text || "";
+                currentAdLink = d.actionLink || "#";
+                const img = document.getElementById('ad-image');
+                if(d.imageUrl) { img.src = d.imageUrl; img.style.display = 'block'; }
+                else { img.style.display = 'none'; }
+            }
+        });
+
+        db.collection("systemSettings").doc("schoolNotice").onSnapshot(doc => {
+            if(doc.exists) {
+                document.getElementById('s-display-text').innerText = doc.data().message;
+            }
+        });
+    }
+
+    function openAdLink() { if(currentAdLink !== "#") window.open(currentAdLink, '_blank'); }
+    function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+    window.onload = loadStudentData;
+</script>
+
+</body>
+</html>

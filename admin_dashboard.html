@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اداري ډشبورډ - بابا هوتک لیسه</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-color: #eee;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #f0f2f5;
+            --border-color: #444;
+            --shadow: rgba(0, 0, 0, 0.2);
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; 
+            padding: 15px; 
+            direction: rtl; 
+            transition: background 0.3s, color 0.3s; 
+        }
+        .dashboard-container { max-width: 800px; margin: auto; }
+        .theme-switch-wrapper { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-bottom: 15px; padding: 10px 0; }
+        .theme-switch { display: inline-block; height: 24px; position: relative; width: 45px; }
+        .theme-switch input { display: none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; border-radius: 34px; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 16px; left: 4px; position: absolute; transition: .4s; width: 16px; border-radius: 50%; }
+        input:checked + .slider { background-color: #3498db; }
+        input:checked + .slider:before { transform: translateX(21px); }
+
+        .dashboard-header { text-align: center; margin-bottom: 30px; background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px var(--shadow); }
+        .school-title { margin: 0; color: var(--text-color); font-size: 22px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 25px; }
+        .stat-card { background: var(--card-bg); padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px var(--shadow); border-bottom: 4px solid #3498db; }
+        .stat-card h3 { margin: 0; font-size: 20px; color: var(--text-color); }
+        .stat-card p { margin: 5px 0 0; font-size: 11px; color: #7f8c8d; font-weight: bold; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-item { background: var(--card-bg); padding: 25px 15px; border-radius: 20px; text-align: center; box-shadow: 0 5px 15px var(--shadow); text-decoration: none; color: var(--text-color); transition: 0.3s; display: flex; flex-direction: column; align-items: center; border: 1px solid var(--border-color); position: relative; cursor: pointer; }
+        .menu-item:hover { transform: translateY(-5px); border-color: #3498db; background: rgba(52, 152, 219, 0.05); }
+        .icon-circle { width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px; }
+
+        /* مینو رنګونه */
+        .item-std .icon-circle { background: #e3f2fd; color: #1e88e5; }
+        .item-teach .icon-circle { background: #fce4ec; color: #d81b60; }
+        .item-announcement .icon-circle { background: #fffde7; color: #fbc02d; }
+        .item-final-toggle .icon-circle { background: #ffebee; color: #c62828; }
+        .item-book .icon-circle { background: #e8eaf6; color: #3f51b5; }
+        .item-exam .icon-circle { background: #fff3e0; color: #f57c00; }
+        .item-sched .icon-circle { background: #f3e5f5; color: #8e24aa; }
+        .item-att .icon-circle { background: #f1f8e9; color: #43a047; }
+        .item-teacher-att .icon-circle { background: #e8f5e9; color: #27ae60; }
+        .item-teacher-report .icon-circle { background: #e1f5fe; color: #0288d1; }
+        .item-fin .icon-circle { background: #fff8e1; color: #ffb300; }
+        .item-res .icon-circle { background: #efebe9; color: #6d4c41; }
+        .item-ids .icon-circle { background: #f3e5f5; color: #8e24aa; }
+        .item-set .icon-circle { background: #eceff1; color: #546e7a; }
+        .item-chat .icon-circle { background: #e0f7fa; color: #0097a7; }
+
+        .unread-badge { position: absolute; top: 10px; left: 10px; background: #e74c3c; color: white; font-size: 12px; padding: 2px 8px; border-radius: 12px; display: none; }
+
+        /* خبرتیا ولیکئ برخه */
+        #noticeInputArea { display: none; grid-column: span 2; background: var(--card-bg); padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px var(--shadow); margin-top: 5px; border: 1px solid #3498db; }
+        textarea { width: 100%; height: 80px; border-radius: 10px; padding: 10px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); resize: none; box-sizing: border-box; font-family: inherit; }
+        .btn-send { background: #3498db; color: white; border: none; padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; width: 100%; font-weight: bold; }
+
+        #viewAllDataBtn { width: 100%; background: #3498db; color: white; padding: 12px; border: none; border-radius: 12px; margin: 15px 0; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-logout { width: 100%; background: var(--card-bg); color: #e74c3c; border: 2px solid #e74c3c; padding: 12px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        
+        .app-notice { background: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 12px; margin: 15px 0; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #856404; }
+        [data-theme="dark"] .app-notice { background: #332b00; color: #ffeb3b; border-color: #444; }
+        .ad-tag { background: #ffc107; color: black; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="theme-switch-wrapper">
+        <span id="theme-label">🌙 تیاره موډ</span>
+        <label class="theme-switch" for="theme-toggle">
+            <input type="checkbox" id="theme-toggle" />
+            <div class="slider"></div>
+        </label>
+    </div>
+
+    <div class="dashboard-header">
+        <h2 class="school-title">  باباهوتک دویم نمبر عالي لیسې اداري
+مرکز</h2>
+        <p style="color: #3498db; margin: 5px 0;">ښه راغلاست، <b>استاد رحمت الله علمي</b></p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3 id="dashTotalStd">0</h3>
+            <p>ټول شاګردان</p>
+        </div>
+        <div class="stat-card" style="border-color: #d81b60;">
+            <h3 id="dashTotalTeachers">0</h3>
+            <p>ټول ښوونکي</p>
+        </div>
+        <div class="stat-card" style="border-color: #2ecc71;">
+            <h3 id="dashPassed">0</h3>
+            <p>کامیاب شاګردان</p>
+        </div>
+        <div class="stat-card" style="border-color: #e74c3c;">
+            <h3 id="dashAbsentToday">0</h3>
+            <p>ننني غیرحاضر</p>
+        </div>
+    </div>
+
+    <div class="menu-grid">
+        <a href="students.html" class="menu-item item-std"><div class="icon-circle">👥</div><strong>زده‌کوونکي</strong></a>
+        <a href="manage_teachers.html" class="menu-item item-teach"><div class="icon-circle">👨‍🏫</div><strong>ښوونکي او یوزران</strong></a>
+        
+        <div class="menu-item item-announcement" onclick="toggleNoticeArea()"><div class="icon-circle">📢</div><strong>خبرتیا خپره کړئ</strong></div>
+        <div class="menu-item item-final-toggle" onclick="promptResultToggle()"><div class="icon-circle">🔐</div><strong id="resultStatusText">د پایلو اعلان</strong></div>
+
+        <div id="noticeInputArea">
+            <textarea id="notif-text" placeholder="خپله خبرتیا دلته ولیکئ..."></textarea>
+            <button class="btn-send" onclick="postNotice()">📤 اوس یې خپره کړه</button>
+        </div>
+
+        <a href="admin_books.html" class="menu-item item-book"><div class="icon-circle">📚</div><strong>اداري کتابونه</strong></a>
+        <a href="exam_schedule.html" class="menu-item item-exam"><div class="icon-circle">📅</div><strong>ازموینو مهالویش</strong></a>
+        <a href="class_schedule.html" class="menu-item item-sched"><div class="icon-circle">⏰</div><strong>تدریسي مهالویش</strong></a>
+        <a href="attendance.html" class="menu-item item-att"><div class="icon-circle">📝</div><strong>د زده‌کوونکو حاضري</strong></a>
+        <a href="teacher_attendance.html" class="menu-item item-teacher-att"><div class="icon-circle">📋</div><strong>د ښوونکو حاضري</strong></a>
+        <a href="teacherattendance_report.html" class="menu-item item-teacher-report"><div class="icon-circle">📊</div><strong>د ښوونکو راپور</strong></a>
+        <a href="finance.html" class="menu-item item-fin"><div class="icon-circle">💰</div><strong>مالي مدیریت</strong></a>
+        <a href="admin_results.html" class="menu-item item-res"><div class="icon-circle">📊</div><strong>نتایج (نظارت)</strong></a>
+        <a href="qr_generator.html" class="menu-item item-ids"><div class="icon-circle">🪪</div><strong>ID کارتونه</strong></a>
+        <a href="settings.html" class="menu-item item-set"><div class="icon-circle">⚙️</div><strong>ترتیبات</strong></a>
+        <a href="admin_chat.html" class="menu-item item-chat"><span id="chatUnread" class="unread-badge">نوې</span><div class="icon-circle">💬</div><strong>چټ</strong></a>
+        <a href="ads_manager.html" class="menu-item item-ad" style="border: 2px solid #fbc02d; background: rgba(251, 192, 45, 0.1);">
+    <div class="icon-circle" style="background: #fff9c4; color: #fbc02d;">📢</div>
+    <strong>د اعلاناتو کنټرول</strong>
+    <p style="font-size: 10px; margin-top: 5px; color: #7f8c8d;">دلته نوي اعلانونه اضافه کړئ</p>
+</a>
+    </div>
+    
+    <button id="viewAllDataBtn">ټول معلومات وګورئ</button>
+    <button onclick="logout()" class="btn-logout">⬅️ له سیسټم څخه وتل</button>
+
+    <div class="app-notice"><div class="ad-tag">تازه</div><p>د سیسټم نوي امکانات (خبرتیا او نتایجو قفل) فعال شول! 🚀</p></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// مینو ټوګل (خبرتیا)
+function toggleNoticeArea() {
+    const area = document.getElementById('noticeInputArea');
+    area.style.display = area.style.display === 'block' ? 'none' : 'block';
+}
+
+// د نتایجو اعلان کنټرول
+async function promptResultToggle() {
+    const snap = await db.collection("systemSettings").doc("resultsConfig").get();
+    const current = snap.exists ? snap.data().showFinalResults : false;
+    const msg = current ? "نتایج اوس خلاص دي. ایا غواړئ شاګردانو ته یې بند کړئ؟" : "نتایج اوس پټ دي. ایا غواړئ شاګردانو ته یې خلاص کړئ؟";
+    
+    if(confirm(msg)) {
+        await db.collection("systemSettings").doc("resultsConfig").set({
+            showFinalResults: !current,
+            lastUpdated: new Date()
+        }, {merge: true});
+        alert("ترتیبات بدل شول!");
+        checkResultStatus();
+    }
+}
+
+async function checkResultStatus() {
+    const snap = await db.collection("systemSettings").doc("resultsConfig").get();
+    const text = document.getElementById('resultStatusText');
+    if(snap.exists && snap.data().showFinalResults) {
+        text.innerText = "نتایج: خلاص دي";
+        text.style.color = "#27ae60";
+    } else {
+        text.innerText = "نتایج: پټ دي";
+        text.style.color = "#e74c3c";
+    }
+}
+
+// خبرتیا لېږل
+async function postNotice() {
+    const msg = document.getElementById('notif-text').value;
+    if(!msg) return alert("لومړی متن ولیکئ!");
+    try {
+        await db.collection("systemSettings").doc("schoolNotice").set({
+            message: msg,
+            date: new Date().toLocaleDateString('fa-AF')
+        });
+        alert("خبرتیا خپره شوه!");
+        document.getElementById('noticeInputArea').style.display = 'none';
+        document.getElementById('notif-text').value = "";
+    } catch(e) { alert("خطا: " + e.message); }
+}
+
+// احصایې او ډارک موډ
+const toggleSwitch = document.querySelector('#theme-toggle');
+const themeLabel = document.querySelector('#theme-label');
+
+toggleSwitch.addEventListener('change', (e) => {
+    const theme = e.target.checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    themeLabel.textContent = theme === 'dark' ? '☀️ روښانه موډ' : '🌙 تیاره موډ';
+});
+
+function loadDashStats() {
+    db.collection("babaStudents").onSnapshot(snap => { document.getElementById('dashTotalStd').innerText = snap.size || 0; });
+    db.collection("babaTeachers").onSnapshot(snap => { document.getElementById('dashTotalTeachers').innerText = snap.size || 0; });
+    
+    const today = new Date().toISOString().split('T')[0];
+    db.collection("babaAttendance").where("date", "==", today).onSnapshot(snap => {
+        let count = 0;
+        snap.forEach(doc => { if(doc.data().status === 'absent') count++; });
+        document.getElementById('dashAbsentToday').innerText = count;
+    });
+
+    db.collection("babaResults").where("status", "==", "کامیاب").onSnapshot(snap => { document.getElementById('dashPassed').innerText = snap.size || 0; });
+}
+
+function watchChatUnread() {
+    db.collection("schoolChat").where("status", "==", "unread").onSnapshot(snap => {
+        document.getElementById('chatUnread').style.display = snap.size > 0 ? 'inline-block' : 'none';
+    });
+}
+
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+window.onload = () => {
+    if(localStorage.getItem('isLoggedIn') !== 'true') window.location.href = 'login.html';
+    loadDashStats();
+    watchChatUnread();
+    checkResultStatus();
+    if(localStorage.getItem('theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        toggleSwitch.checked = true;
+        themeLabel.textContent = '☀️ روښانه موډ';
+    }
+};
+</script>
+</body>
+</html>

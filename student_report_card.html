@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رسمي اطلاعنامه</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    <style>
+        /* د موبایل لپاره سټایل */
+        body { font-family: 'Tahoma', sans-serif; margin: 0; padding: 0; background: #f0f2f5; }
+        .no-print { background: #fff; padding: 15px; border-bottom: 2px solid #007bff; position: sticky; top: 0; z-index: 1000; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #007bff; font-size: 16px; margin-bottom: 10px; }
+        .print-btn { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        /* د اطلاعنامې جوړښت - کټ مټ د عکس مطابق */
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 10px auto;
+            background: white;
+            border: 1px solid #d3d3d3;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: none; /* تر انتخاب پورې پټه وي */
+        }
+
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .header h1 { font-size: 20px; margin: 5px 0; }
+        .header h2 { font-size: 16px; margin: 2px 0; font-weight: normal; }
+
+        .banner { background: #b8d1f3; text-align: center; padding: 10px; border: 2px solid #000; margin: 15px 0; }
+        .banner h3 { margin: 0; font-size: 22px; letter-spacing: 5px; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { border: 1.5px solid #000; padding: 6px; text-align: center; font-size: 14px; }
+        .label-cell { background: #f2f2f2; font-weight: bold; text-align: right; width: 120px; }
+        .subject-name { text-align: right; font-weight: bold; padding-right: 15px !important; }
+
+        .footer-sig { display: flex; justify-content: space-around; margin-top: 40px; text-align: center; font-weight: bold; font-size: 13px; }
+
+        /* د چاپ لپاره دقیق تنظیمات */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background: white; padding: 0; }
+            .no-print { display: none; }
+            .a4-page { display: block !important; width: 100%; border: none; box-shadow: none; margin: 0; padding: 10mm; }
+            .banner { -webkit-print-color-adjust: exact; background-color: #b8d1f3 !important; }
+        }
+
+        /* په موبایل کې د نمایش لپاره مناسبول */
+        @media screen and (max-width: 210mm) {
+            .a4-page { width: 95%; height: auto; padding: 10px; margin: 10px auto; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <select id="studentSelect" onchange="loadDynamicReport()">
+        <option value="">د زده کوونکي نوم انتخاب کړئ...</option>
+    </select>
+    <button class="print-btn" onclick="window.print()">🖨️ په A4 پاڼه کې چاپول</button>
+</div>
+
+<div id="reportCard" class="a4-page">
+    <div class="header">
+        <h1>د پوهنې وزارت</h1>
+        <h2>د ( زابل ) د پوهنې ریاست</h2>
+        <h2>د ( شاه جوی ) د پوهنې آمریت</h2>
+        <h1>د ( بابا هوتک ۲ نمبر ) عالي لیسه</h1>
+    </div>
+
+    <div class="banner"><h3>اطلاع نامه</h3></div>
+
+    <table>
+        <tr>
+            <td class="label-cell">نوم:</td><td id="name">---</td>
+            <td class="label-cell">پلار نوم:</td><td id="father">---</td>
+        </tr>
+        <tr>
+            <td class="label-cell">اساس ګڼه:</td><td id="id">---</td>
+            <td class="label-cell">ټولګی:</td><td>نهم (ب)</td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr style="background: #eee;">
+                <th style="width: 40%;">مضامین</th>
+                <th>۴.۵ میاشتنۍ</th>
+                <th>کلنۍ آزموینه</th>
+                <th>مجموعه</th>
+            </tr>
+        </thead>
+        <tbody id="marksBody">
+            </tbody>
+        <tfoot>
+            <tr style="background: #f2f2f2; font-weight: bold;">
+                <td class="subject-name">د نمرو مجموعه</td>
+                <td id="mSum">0</td><td id="fSum">0</td><td id="tSum">0</td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td class="subject-name">د نمرو اوسط</td>
+                <td id="mAvg">0</td><td id="fAvg">0</td><td id="tAvg">0</td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td class="subject-name">پایله</td>
+                <td colspan="3" id="status" style="font-size: 18px; color: #007bff;">---</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="footer-sig">
+        <div>د ټولګي نګران<br><br>__________</div>
+        <div>سر ښوونکی<br><br>__________</div>
+        <div>د ښوونځي مدیر<br><br>__________</div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const subjects = ["قرآنکریم", "دیني ښوونې", "پښتو", "دري", "عربي", "انګلیسي", "ریاضي", "فزیک", "کیمیا", "بیولوژي", "ساینس", "ټولنیز/تاریخ", "جغرافیه", "حرفه", "بدني روزنه", "تهذیب"];
+
+    async function init() {
+        const snap = await db.collection("studentMarks").get();
+        const sel = document.getElementById('studentSelect');
+        snap.forEach(doc => {
+            if(doc.data().info) sel.innerHTML += `<option value="${doc.id}">${doc.data().info.name}</option>`;
+        });
+    }
+
+    async function loadDynamicReport() {
+        const sid = document.getElementById('studentSelect').value;
+        if(!sid) return;
+
+        const doc = await db.collection("studentMarks").doc(sid).get();
+        const d = doc.data();
+
+        // ډکولو برخه
+        document.getElementById('name').innerText = d.info.name;
+        document.getElementById('father').innerText = d.info.father;
+        document.getElementById('id').innerText = d.info.id;
+
+        let rows = "";
+        subjects.forEach(sub => {
+            const m = d.marks[sub] || { m45: 0, mAn: 0 };
+            const total = (parseInt(m.m45)||0) + (parseInt(m.mAn)||0);
+            rows += `<tr><td class="subject-name">${sub}</td><td>${m.m45}</td><td>${m.mAn}</td><td><b>${total}</b></td></tr>`;
+        });
+        document.getElementById('marksBody').innerHTML = rows;
+
+        document.getElementById('mSum').innerText = d.summary.mid_sum;
+        document.getElementById('fSum').innerText = d.summary.fin_sum;
+        document.getElementById('tSum').innerText = parseInt(d.summary.mid_sum) + parseInt(d.summary.fin_sum);
+        document.getElementById('mAvg').innerText = d.summary.mid_avg;
+        document.getElementById('fAvg').innerText = d.summary.fin_avg;
+        document.getElementById('tAvg').innerText = ((parseFloat(d.summary.mid_avg) + parseFloat(d.summary.fin_avg)) / 2).toFixed(2);
+        document.getElementById('status').innerText = d.summary.final_status;
+
+        document.getElementById('reportCard').style.display = 'block';
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

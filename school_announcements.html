@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خبرتیاوې - بابا هوتک لیسه</title>
+    <style>
+        :root { --primary: #e67e22; --bg: #fdfaf6; --success: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { text-align: center; margin-bottom: 20px; color: var(--primary); }
+        
+        .announcement-card { background: #fff8f0; border-right: 5px solid var(--primary); padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .ann-title { font-weight: bold; font-size: 16px; color: #d35400; display: block; margin-bottom: 8px; }
+        .ann-body { font-size: 14px; line-height: 1.6; color: #2c3e50; }
+        .ann-date { font-size: 10px; color: #95a5a6; display: block; margin-top: 10px; text-align: left; }
+
+        /* اډمین ته د خبرتیا لیکلو برخه */
+        .admin-post { background: #f0f0f0; padding: 15px; border-radius: 20px; margin-bottom: 25px; }
+        textarea { width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; outline: none; box-sizing: border-box; resize: none; }
+        .post-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; margin-top: 10px; font-weight: bold; width: 100%; }
+        
+        .back-btn { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h3 style="margin:0;">📢 د ادارې خبرتیاوې</h3>
+        <p style="font-size: 12px; color: #888;">مهم اعلانونه او خبرونه</p>
+    </div>
+
+    <div id="adminArea" class="admin-post" style="display: none;">
+        <textarea id="annText" rows="3" placeholder="نوی خبر دلته ولیکئ..."></textarea>
+        <button class="post-btn" onclick="postAnnouncement()">خپرول</button>
+    </div>
+
+    <div id="annContainer">
+        <p style="text-align:center; color:#999;">د خبرونو راوړل...</p>
+    </div>
+
+    <a href="#" onclick="history.back()" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // فایربیس تنظیمات
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // که اډمین وي، د لیکلو برخه ورته ښکاره کړه
+    if(localStorage.getItem('userRole') === 'admin') {
+        document.getElementById('adminArea').style.display = 'block';
+    }
+
+    // خبرونه راوړل
+    db.collection("announcements").orderBy("time", "desc").onSnapshot((snapshot) => {
+        const container = document.getElementById('annContainer');
+        container.innerHTML = "";
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            container.innerHTML += `
+                <div class="announcement-card">
+                    <span class="ann-title">📌 خبرتیا</span>
+                    <p class="ann-body">${data.text}</p>
+                    <span class="ann-date">${new Date(data.time).toLocaleDateString('fa-AF')}</span>
+                </div>
+            `;
+        });
+    });
+
+    // د نوي خبر خپرول
+    async function postAnnouncement() {
+        const text = document.getElementById('annText').value.trim();
+        if(!text) return;
+
+        await db.collection("announcements").add({
+            text: text,
+            time: Date.now(),
+            sender: localStorage.getItem('userName')
+        });
+        document.getElementById('annText').value = "";
+        alert("✅ خبرتیا خپره شوه!");
+    }
+</script>
+
+</body>
+</html>

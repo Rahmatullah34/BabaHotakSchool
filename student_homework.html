@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کورنۍ دنده - بابا هوتک لیسه</title>
+    <style>
+        :root { --success: #27ae60; --bg: #f8fafc; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; color: var(--text); }
+        
+        .container { max-width: 500px; margin: auto; }
+        .header { background: white; padding: 20px; border-radius: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        .hw-card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border-right: 6px solid var(--success); }
+        .hw-subject { font-weight: bold; color: var(--success); font-size: 16px; display: flex; justify-content: space-between; }
+        .hw-teacher { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+        .hw-desc { margin-top: 10px; font-size: 14px; line-height: 1.6; background: #f9f9f9; padding: 10px; border-radius: 10px; }
+        .hw-date { font-size: 10px; color: #95a5a6; display: block; margin-top: 10px; text-align: left; }
+
+        .back-btn { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #888; font-weight: bold; }
+        .empty-msg { text-align: center; padding: 40px; color: #95a5a6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 style="margin:0; color: var(--success);">📚 کورنۍ دندې</h2>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">خپلې ورځنۍ دندې دلته وګورئ</p>
+    </div>
+
+    <div id="homeworkList">
+        </div>
+
+    <a href="student_dashboard.html" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // فایربیس تنظیمات
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function loadHomework() {
+        const hwList = document.getElementById('homeworkList');
+        // د نهم الف ټولګي لپاره د دندو راوړل (تاسو کولی شئ دا متغیر کړئ)
+        const targetClass = "نهم (الف)"; 
+
+        try {
+            const querySnapshot = await db.collection("homeworks")
+                .where("targetClass", "==", targetClass)
+                .orderBy("timestamp", "desc")
+                .get();
+
+            if (querySnapshot.empty) {
+                hwList.innerHTML = "<div class='empty-msg'>🎉 د نن لپاره کورنۍ دنده نشته!</div>";
+                return;
+            }
+
+            hwList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                hwList.innerHTML += `
+                    <div class="hw-card">
+                        <div class="hw-subject">
+                            <span>${data.subject}</span>
+                            <span style="font-size: 12px; color: #e67e22;">📌 نوې</span>
+                        </div>
+                        <div class="hw-teacher">استاد: ${data.teacherName}</div>
+                        <div class="hw-desc">${data.task}</div>
+                        <span class="hw-date">نېټه: ${data.date}</span>
+                    </div>
+                `;
+            });
+        } catch (error) {
+            console.error("Error loading homework: ", error);
+            hwList.innerHTML = "<div class='empty-msg'>❌ د دندو په راوړلو کې ستونزه ده.</div>";
+        }
+    }
+
+    loadHomework();
+</script>
+
+</body>
+</html>

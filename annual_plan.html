@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کلنی درسي پلان - بابا هوتک لیسه</title>
+    <style>
+        :root { --primary: #4A90E2; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
+        .calc-box { background: #eef5ff; padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px dashed var(--primary); }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; font-size: 13px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
+        .result-area { background: white; padding: 15px; border-radius: 15px; margin-top: 15px; display: none; }
+        .result-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .btn-calc { background: var(--primary); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align:center; color:var(--primary);">📅 د کلني پلان محاسبه</h2>
+    
+    <div class="calc-box">
+        <div class="grid-inputs">
+            <div class="input-group">
+                <label>د کتاب د مخونو شمېر:</label>
+                <input type="number" id="totalPages" placeholder="مثلاً: ۲۰۰" oninput="calculatePlan()">
+            </div>
+            <div class="input-group">
+                <label>په اونۍ کې ساعتونه:</label>
+                <input type="number" id="weeklyHours" placeholder="مثلاً: ۴" oninput="calculatePlan()">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>ټولې تدریسي اونۍ (معمولاً ۲۸):</label>
+            <input type="number" id="totalWeeks" value="28" oninput="calculatePlan()">
+        </div>
+    </div>
+
+    <div id="resultArea" class="result-area">
+        <h4 style="margin-top:0; color:#2c3e50;">📊 د محاسبې پایله:</h4>
+        <div class="result-item"><span>ټول کلني درسي ساعتونه:</span> <strong id="resTotalHours">۰</strong></div>
+        <div class="result-item"><span>د هر ساعت تدریس اندازه:</span> <strong id="resPagePerHour">۰</strong> مخه</div>
+        <div class="result-item"><span>د میاشتې تدریس اندازه:</span> <strong id="resPagePerMonth">۰</strong> مخه</div>
+        <button class="btn-calc" onclick="saveAnnualPlan()">دا پلان ثبت کړه ✅</button>
+    </div>
+
+    <a href="teacher_dashboard.html" style="display:block; text-align:center; margin-top:15px; text-decoration:none; color:#777;">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script>
+    function calculatePlan() {
+        const pages = parseFloat(document.getElementById('totalPages').value);
+        const weeklyHours = parseFloat(document.getElementById('weeklyHours').value);
+        const weeks = parseFloat(document.getElementById('totalWeeks').value);
+
+        if (pages && weeklyHours && weeks) {
+            // ۱. کلني ساعتونه = اونۍ × ساعتونه
+            const totalHours = weeks * weeklyHours;
+            
+            // ۲. د هر ساعت اندازه = مخونه ÷ کلني ساعتونه
+            const pagePerHour = (pages / totalHours).toFixed(2);
+            
+            // ۳. میاشتنی تدریس (په اوسط ډول ۴ اونۍ)
+            const pagePerMonth = (pages / (weeks / 4)).toFixed(0);
+
+            document.getElementById('resTotalHours').innerText = totalHours + " ساعتونه";
+            document.getElementById('resPagePerHour').innerText = pagePerHour;
+            document.getElementById('resPagePerMonth').innerText = pagePerMonth;
+            document.getElementById('resultArea').style.display = 'block';
+        }
+    }
+
+    async function saveAnnualPlan() {
+        // دلته به د Firebase د ذخیره کولو کوډ اضافه شي
+        alert("ستاسو کلنی پلان د سیسټم په حافظه کې ثبت شو!");
+    }
+</script>
+
+</body>
+</html>

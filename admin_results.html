@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د نتایجو عمومي نظارت - مدیر</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; padding: 10px; direction: rtl; }
+        .admin-card { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 800px; margin: auto; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-box { padding: 20px 10px; border-radius: 15px; text-align: center; color: white; font-weight: bold; }
+        .passed { background: #2ecc71; }
+        .failed { background: #e74c3c; }
+        .finished { background: #f39c12; }
+        .stat-box h2 { margin: 0; font-size: 24px; }
+        .stat-box p { margin: 5px 0 0; font-size: 12px; }
+
+        .filter-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        select { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #ddd; font-family: inherit; font-size: 14px; outline: none; background: #f9f9f9; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: #34495e; color: white; padding: 12px; text-align: center; font-size: 14px; }
+        td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px; }
+        
+        .btn-view { background: #3498db; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 18px; }
+        .no-data { text-align: center; padding: 30px; color: #7f8c8d; font-size: 14px; }
+
+        #transcriptModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; overflow-y:auto; }
+        .modal-content { background:white; width:95%; max-width:500px; margin:30px auto; padding:20px; border-radius:20px; position:relative; }
+        .close-btn { position:absolute; left:20px; top:15px; font-size:30px; cursor:pointer; color: #e74c3c; font-weight: bold; }
+        
+        .transcript-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .transcript-table th, .transcript-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .transcript-table th { background: #f8f9fa; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #transcriptModal, #transcriptModal * { visibility: visible; }
+            #transcriptModal { position: absolute; left: 0; top: 0; width: 100%; background: white; }
+            .close-btn, .btn-print-modal { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="margin:0;">📊 د نتایجو د څارنې مرکز</h3>
+        <button onclick="window.history.back()" style="border:none; background:#eee; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:bold;">شاته ⬅️</button>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box passed"><h2 id="totalPassed">0</h2><p>کامیاب شاګردان</p></div>
+        <div class="stat-box failed"><h2 id="totalFailed">0</h2><p>ناکام شاګردان</p></div>
+        <div class="stat-box finished"><h2 id="totalFinished">0</h2><p>بشپړ شوي صنفونه</p></div>
+    </div>
+
+    <div class="filter-group">
+        <select id="classFilter" onchange="loadAdminResults()">
+            <option value="">ټولګی وټاکئ</option>
+            <option value="لومړی">لومړی</option>
+            <option value="دوهم">دوهم</option>
+            <option value="دریم">دریم</option>
+            <option value="څلورم">څلورم</option>
+            <option value="پنځم">پنځم</option>
+            <option value="شپږم">شپږم</option>
+            <option value="اووم">اووم</option>
+            <option value="اتم">اتم</option>
+            <option value="نهم">نهم</option>
+            <option value="لسم">لسم</option>
+            <option value="یوولسم">یوولسم</option>
+            <option value="دولسم">دولسم</option>
+        </select>
+        <select id="sectionFilter" onchange="loadAdminResults()">
+            <option value="الف">الف (A)</option>
+            <option value="ب">ب (B)</option>
+            <option value="ج">ج (C)</option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>شاګرد</th>
+                <th>ټولې نمرې</th>
+                <th>سلنه</th>
+                <th>نتیجه</th>
+                <th>پارچه</th>
+            </tr>
+        </thead>
+        <tbody id="adminResTableBody">
+            <tr><td colspan="5" class="no-data">د معلوماتو لیدلو لپاره ټولګی او شعبه وټاکئ.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div id="transcriptModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 style="text-align:center; border-bottom:2px solid #27ae60; padding-bottom:10px; color: #27ae60;">📋 د شاګرد رسمي پارچه</h3>
+        <div id="transcriptContent"></div>
+        <button class="btn-print-modal" onclick="window.print()" style="width:100%; padding:15px; background:#27ae60; color:white; border:none; border-radius:10px; margin-top:20px; cursor:pointer; font-weight:bold; font-size: 16px;">🖨️ د پارچې چاپول</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function loadAdminResults() {
+        const grade = document.getElementById('classFilter').value;
+        const section = document.getElementById('sectionFilter').value;
+        const tbody = document.getElementById('adminResTableBody');
+
+        if(!grade || !section) return;
+
+        tbody.innerHTML = "<tr><td colspan='5' class='no-data'>ډیټا راوستل کېږي... ⏳</td></tr>";
+
+        try {
+            const studentSnap = await db.collection("babaStudents")
+                .where("grade", "==", grade)
+                .where("section", "==", section)
+                .get();
+
+            let passed = 0, failed = 0, html = "", found = false;
+
+            for (const studentDoc of studentSnap.docs) {
+                const studentId = studentDoc.id;
+                const studentData = studentDoc.data();
+                const marksDoc = await db.collection("studentMarks").doc(studentId).get();
+
+                if (marksDoc.exists) {
+                    found = true;
+                    const marksData = marksDoc.data();
+                    const summary = marksData.summary || {};
+                    
+                    const name = studentData.name || "بې نومه";
+                    const total = summary.fin_sum || summary.mid_sum || 0;
+                    const avg = parseFloat(summary.fin_avg || summary.mid_avg || 0).toFixed(1);
+                    const status = summary.final_status || (avg >= 50 ? "کامیاب" : "ناکام");
+
+                    if(avg >= 50 && status !== "محروم") passed++; else failed++;
+
+                    html += `
+                        <tr>
+                            <td><b>${name}</b></td>
+                            <td>${total}</td>
+                            <td style="font-weight:bold;">${avg}%</td>
+                            <td><span style="color:${(avg >= 50 && status !== 'محروم') ? '#2ecc71' : '#e74c3c'}; font-weight:bold;">${status}</span></td>
+                            <td><button class="btn-view" onclick="viewTranscript('${studentId}')">👁️</button></td>
+                        </tr>`;
+                }
+            }
+
+            tbody.innerHTML = found ? html : "<tr><td colspan='5' class='no-data'>پایلې پیدا نه شوې.</td></tr>";
+            updateStats(passed, failed);
+
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = "<tr><td colspan='5' class='no-data' style='color:red;'>ډیټا لوډ نه شوه!</td></tr>";
+        }
+    }
+
+    async function viewTranscript(id) {
+        const modal = document.getElementById('transcriptModal');
+        const content = document.getElementById('transcriptContent');
+        modal.style.display = "block";
+        content.innerHTML = "<p style='text-align:center;'>لوډ کېږي... ⏳</p>";
+
+        try {
+            const doc = await db.collection("studentMarks").doc(id).get();
+            const studentDoc = await db.collection("babaStudents").doc(id).get();
+            
+            const data = doc.data();
+            const sData = studentDoc.data();
+            const marks = data.marks || {};
+            const summary = data.summary || {};
+
+            let tableHtml = `
+                <div style="background:#f1f8f5; padding:15px; border-radius:10px; margin-bottom:15px; font-size:14px; border: 1px solid #27ae60;">
+                    <p style="margin:5px 0;"><b>نوم:</b> ${sData.name} | <b>پلار:</b> ${sData.fname || sData.father || '---'}</p>
+                    <p style="margin:5px 0;"><b>اساس نمبر:</b> ${sData.id || id} | <b>ټولګی:</b> ${sData.grade} (${sData.section})</p>
+                </div>
+                <table class="transcript-table">
+                    <thead>
+                        <tr>
+                            <th>مضمون</th>
+                            <th>۴.۵ نمرې</th>
+                            <th>کلنۍ نمرې</th>
+                            <th>مجموعه</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            for (let sub in marks) {
+                tableHtml += `
+                    <tr>
+                        <td style="text-align:right; font-weight:bold;">${sub}</td>
+                        <td>${marks[sub].m45 || '0'}</td>
+                        <td>${marks[sub].mAn || '0'}</td>
+                        <td style="color:#1565c0; font-weight:bold;">${marks[sub].total || '0'}</td>
+                    </tr>`;
+            }
+
+            tableHtml += `</tbody></table>
+                <div style="margin-top:20px; padding:15px; background:#27ae60; color:white; border-radius:10px; text-align:center;">
+                    <span style="font-size:16px;"><b>ټولې نمرې: ${summary.fin_sum || 0}</b></span><br>
+                    <span style="font-size:14px;">اوسط: ${summary.fin_avg || 0}% | پایله: ${summary.final_status || '---'}</span>
+                </div>`;
+
+            content.innerHTML = tableHtml;
+        } catch (e) {
+            content.innerHTML = "<p style='color:red;'>د پارچې لوډولو کې خطا وشوه!</p>";
+        }
+    }
+
+    function closeModal() { document.getElementById('transcriptModal').style.display = "none"; }
+    
+    function updateStats(p, f) {
+        document.getElementById('totalPassed').innerText = p;
+        document.getElementById('totalFailed').innerText = f;
+        document.getElementById('totalFinished').innerText = (p + f > 0) ? "1" : "0";
+    }
+
+    window.onclick = function(event) {
+        let modal = document.getElementById('transcriptModal');
+        if (event.target == modal) closeModal();
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د سیسټم ترتیبات - بابا هوتک لیسه</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; direction: rtl; }
+        .settings-container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid #f0f2f5; padding-bottom: 15px; }
+        .back-btn { text-decoration: none; color: #3498db; font-weight: bold; font-size: 14px; }
+        
+        .setting-group { margin-bottom: 20px; }
+        .setting-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #2c3e50; font-size: 14px; }
+        .setting-group input, .setting-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: inherit; box-sizing: border-box; }
+        
+        .save-btn { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .save-btn:hover { background: #219150; }
+        
+        .danger-zone { margin-top: 40px; padding: 20px; border: 1px dashed #e74c3c; border-radius: 15px; background: #fff5f5; }
+        .danger-zone h4 { color: #e74c3c; margin-top: 0; }
+        .reset-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="settings-container">
+    <div class="header">
+        <h2 style="margin:0;">⚙️ د سیسټم ترتیبات</h2>
+        <a href="admin_dashboard.html" class="back-btn">⬅️ شاته</a>
+    </div>
+
+    <div class="setting-group">
+        <label>د ښوونځي نوم:</label>
+        <input type="text" id="schoolName" placeholder="مثلاً: بابا هوتک لیسه">
+    </div>
+
+    <div class="setting-group">
+        <label>د مدیر نوم:</label>
+        <input type="text" id="adminName" placeholder="مثلاً: رحمت الله علمي">
+    </div>
+
+    <div class="setting-group">
+        <label>د رخصتۍ ورځ:</label>
+        <select id="offDay">
+            <option value="جمعه">جمعه</option>
+            <option value="پنجشنبه">پنجشنبه</option>
+        </select>
+    </div>
+
+    <div class="setting-group">
+        <label>د حاضري وخت (ناوخته کېدل - دقیقه):</label>
+        <input type="number" id="lateLimit" value="15">
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">💾 تغیرات خوندي کړه</button>
+
+    <div class="danger-zone">
+        <h4>خطرناکه سیمه!</h4>
+        <p style="font-size: 12px; color: #666;">پام کوئ، د ډیټا پاکول بېرته نهګرځي.</p>
+        <button class="reset-btn" onclick="clearLocalData()">د براوزر حافظه پاکه کړه</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    // فایربیس تنظیمات
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // د ترتیباتو راوړل
+    async function loadSettings() {
+        const doc = await db.collection("schoolSettings").doc("general").get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('schoolName').value = data.schoolName || "";
+            document.getElementById('adminName').value = data.adminName || "";
+            document.getElementById('offDay').value = data.offDay || "جمعه";
+            document.getElementById('lateLimit').value = data.lateLimit || 15;
+        }
+    }
+
+    // د ترتیباتو خوندي کول
+    async function saveSettings() {
+        const sName = document.getElementById('schoolName').value;
+        const aName = document.getElementById('adminName').value;
+        const oDay = document.getElementById('offDay').value;
+        const lLimit = document.getElementById('lateLimit').value;
+
+        try {
+            await db.collection("schoolSettings").doc("general").set({
+                schoolName: sName,
+                adminName: aName,
+                offDay: oDay,
+                lateLimit: lLimit,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("✅ ترتیبات په بریالیتوب سره اپډېټ شول!");
+        } catch (e) {
+            alert("تېروتنه: " + e.message);
+        }
+    }
+
+    function clearLocalData() {
+        if(confirm("ایا ډاډه یاست چې غواړئ د براوزر تاریخچه او لاګ ان معلومات پاک کړئ؟")) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    }
+
+    window.onload = loadSettings;
+</script>
+</body>
+</html>

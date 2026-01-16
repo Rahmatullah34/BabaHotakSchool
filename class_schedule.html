@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تدریسي مهالویش - بابا هوتک لیسه</title>
+    <style>
+        :root { --bg: #f0f2f5; --card: #fff; --text: #2c3e50; }
+        [data-theme="dark"] { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f2f5; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; direction: rtl; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        
+        .upload-section { border: 2px dashed #3498db; padding: 20px; border-radius: 15px; margin-bottom: 20px; cursor: pointer; }
+        #scheduleImage { max-width: 100%; border-radius: 10px; margin-top: 15px; display: none; }
+        
+        .btn-save { background: #3498db; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; }
+        .btn-back { display: block; margin-top: 15px; color: #7f8c8d; text-decoration: none; font-size: 14px; }
+        
+        .loading { display: none; color: #3498db; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>📅 د تدریسي مهالویش پورته کول</h2>
+        <p>دلته د نوي تقسیم اوقات عکس انتخاب او اپلوډ کړئ.</p>
+        
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <p>د عکس انتخابولو لپاره دلته کلیک وکړئ</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="previewFile()">
+        </div>
+
+        <img id="preview" style="max-width: 100%; border-radius: 10px; margin-bottom: 15px; display: none;">
+        
+        <div id="loadingMsg" class="loading">د عکس اپلوډ کېدو په حال کې دی... ⏳</div>
+        <button class="btn-save" onclick="uploadSchedule()">خوندي کول 🚀</button>
+        
+        <hr>
+        <h3>اوسنی مهالویش:</h3>
+        <img id="currentSchedule" src="" alt="اوسنی مهالویش نشته" style="max-width: 100%; border-radius: 10px;">
+        
+        <a href="admin_dashboard.html" class="btn-back">🔙 بیرته ډشبورډ ته</a>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.appspot.com", // سټوریج بکټ
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// ډارک موډ چک کول
+if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+// د عکس پیش‌لید (Preview)
+function previewFile() {
+    const file = document.getElementById('fileInput').files[0];
+    const preview = document.getElementById('preview');
+    const reader = new FileReader();
+    reader.onloadend = () => { preview.src = reader.result; preview.style.display = 'block'; }
+    if (file) reader.readAsDataURL(file);
+}
+
+// د عکس اپلوډ کول
+async function uploadSchedule() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) return alert("مهرباني وکړئ عکس انتخاب کړئ!");
+
+    const loading = document.getElementById('loadingMsg');
+    loading.style.display = 'block';
+
+    const storageRef = storage.ref('schedules/class_schedule.jpg');
+    
+    try {
+        await storageRef.put(file);
+        const url = await storageRef.getDownloadURL();
+        
+        // په فایرسټور کې د لینک خوندي کول
+        await db.collection("schoolData").doc("classSchedule").set({
+            imageUrl: url,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("مهالویش په بریالیتوب سره اپډېټ شو! ✅");
+        location.reload();
+    } catch (error) {
+        console.error(error);
+        alert("تېروتنه وشوه!");
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+// د اوسني عکس راوستل
+db.collection("schoolData").doc("classSchedule").get().then(doc => {
+    if (doc.exists) {
+        document.getElementById('currentSchedule').src = doc.data().imageUrl;
+    }
+});
+</script>
+</body>
+</html>

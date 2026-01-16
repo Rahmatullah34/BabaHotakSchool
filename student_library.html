@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>کتابتون - بابا هوتک لیسه</title>
+    <style>
+        :root { --success: #27ae60; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; }
+        
+        .container { max-width: 500px; margin: auto; }
+        .header { background: white; padding: 20px; border-radius: 25px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+        /* د کتابونو لیست */
+        .book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .book-card { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border: 1px solid #eee; transition: 0.3s; }
+        .book-card:hover { transform: translateY(-5px); border-color: var(--success); }
+        
+        .book-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .book-title { font-weight: bold; font-size: 14px; color: #2c3e50; display: block; margin-bottom: 5px; }
+        .book-size { font-size: 10px; color: #95a5a6; }
+
+        .btn-download { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: bold; width: 100%; margin-top: 10px; }
+        
+        .back-btn { display: block; text-align: center; margin-top: 25px; text-decoration: none; color: #7f8c8d; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 style="margin:0; color: var(--success);">📖 ډیجیټل کتابتون</h2>
+        <p style="font-size: 12px; color: #888; margin-top: 5px;">خپل درسي کتابونه دلته ډاونلوډ کړئ</p>
+    </div>
+
+    <div class="book-grid" id="booksContainer">
+        </div>
+
+    <a href="student_dashboard.html" class="back-btn">⬅️ بېرته ډشبورډ ته</a>
+</div>
+
+<script>
+    // د کتابونو لیست (تاسو کولی شئ دا وروسته له ډیټابیس سره وصل کړئ)
+    const books = [
+        { title: "کیمیا نهم", size: "4.5 MB", icon: "🧪", link: "books/chemistry9.pdf" },
+        { title: "فزیک نهم", size: "5.2 MB", icon: "⚛️", link: "books/physics9.pdf" },
+        { title: "ریاضی نهم", size: "6.8 MB", icon: "📐", link: "books/math9.pdf" },
+        { title: "پښتو نهم", size: "3.1 MB", icon: "📚", link: "books/pashto9.pdf" },
+        { title: "کمپیوټر نهم", size: "2.9 MB", icon: "💻", link: "books/comp9.pdf" },
+        { title: "بیولوژي نهم", size: "4.7 MB", icon: "🧬", link: "books/bio9.pdf" }
+    ];
+
+    const container = document.getElementById('booksContainer');
+
+    books.forEach(book => {
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        card.innerHTML = `
+            <span class="book-icon">${book.icon}</span>
+            <span class="book-title">${book.title}</span>
+            <span class="book-size">${book.size}</span>
+            <button class="btn-download" onclick="downloadBook('${book.link}')">کتاب لوستل</button>
+        `;
+        container.appendChild(card);
+    });
+
+    function downloadBook(link) {
+        alert("کتاب د پرانیستلو په حال کې دی...");
+        // window.open(link, '_blank'); // د فایل پرانیستلو لپاره
+    }
+</script>
+
+</body>
+</html>

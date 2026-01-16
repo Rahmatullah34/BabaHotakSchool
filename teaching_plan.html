@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ښوونکي ډشبورډ - بابا هوتک لیسه</title>
+    <style>
+        :root { --primary: #4A90E2; --bg: #f8fafc; --text: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; direction: rtl; color: var(--text); }
+        
+        /* پروفایل برخه */
+        .top-card { background: white; padding: 20px; border-radius: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .p-info { display: flex; align-items: center; gap: 15px; }
+        .p-info img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; cursor: pointer; }
+        .logout-btn { background: #ffeded; color: #e74c3c; border: none; padding: 10px 18px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 14px; }
+
+        /* احصائیوي کارتونه */
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .s-card { background: white; padding: 15px; border-radius: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-bottom: 4px solid var(--primary); cursor: pointer; transition: 0.2s; }
+        .s-card:hover { transform: scale(1.02); }
+        .s-card h3 { margin: 0; font-size: 20px; color: #333; }
+        .s-card p { margin: 5px 0 0; font-size: 11px; color: #7f8c8d; font-weight: bold; }
+
+        /* اصلي مینو - د ښه ځای پر ځای کېدو لپاره */
+        .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .m-btn { background: white; padding: 15px 5px; border-radius: 20px; text-align: center; text-decoration: none; color: var(--text); transition: 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid #f0f0f0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .m-btn:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(74,144,226,0.1); }
+        .m-btn i { font-size: 24px; font-style: normal; }
+        .m-btn span { font-size: 11px; font-weight: 600; }
+
+        /* خبرتیاوې */
+        .info-section { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 2px 15px rgba(0,0,0,0.04); }
+        .section-title { display: flex; align-items: center; gap: 10px; color: var(--primary); margin-bottom: 15px; font-size: 17px; }
+        .alert-box { background: #fef9e7; padding: 12px; border-radius: 15px; border-right: 5px solid #f1c40f; margin-bottom: 10px; position: relative; }
+        .alert-box p { margin: 0; font-size: 13px; line-height: 1.6; }
+        .alert-date { font-size: 10px; color: #95a5a6; display: block; margin-top: 5px; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div class="top-card">
+    <div class="p-info">
+        <img id="teacherPhoto" src="https://via.placeholder.com/70" onclick="alert('ستاسو سوانح: \n تقرر نېټه: ۱۴۰۲/۰۱/۱۵ \n معاش: ۹۰۰۰ افغانۍ')" alt="P">
+        <div>
+            <h3 id="teacherName" style="margin:0; font-size: 18px;">استاد رحمت الله علمي</h3>
+            <span style="font-size:12px; color:#7f8c8d;">رول: ښوونکی</span>
+        </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">وتل ⬅️</button>
+</div>
+
+<div class="stats-row">
+    <div class="s-card" onclick="window.location.href='my_students.html'"><h3>۱۲</h3><p>شاګردان</p></div>
+    <div class="s-card"><h3>۴</h3><p>ساعتونه</p></div>
+    <div class="s-card"><h3>۹۵٪</h3><p>حاضري</p></div>
+</div>
+
+<div class="menu-grid">
+    <a href="teaching_plan.html" class="m-btn"><i>📝</i><span>ساعتوار پلان</span></a>
+    <a href="monthly_plan.html" class="m-btn"><i>📅</i><span>میاشتنی پلان</span></a>
+    <a href="annual_plan.html" class="m-btn"><i>📊</i><span>کلنی پلان</span></a>
+    
+    <a href="submit_marks.html" class="m-btn"><i>📈</i><span>نمرې رسول</span></a>
+    <a href="results.html" class="m-btn"><i>📜</i><span>نتایج</span></a>
+    <a href="take_attendance.html" class="m-btn"><i>✅</i><span>حاضري</span></a>
+    
+    <a href="parent_chat.html" class="m-btn"><i>💬</i><span>چټ</span></a>
+    <a href="homework.html" class="m-btn"><i>📚</i><span>کورنۍ دنده</span></a>
+    <a href="leave_request.html" class="m-btn"><i>✉️</i><span>رخصتي</span></a>
+    
+    <a href="library.html" class="m-btn"><i>📖</i><span>کتابتون</span></a>
+    <a href="profile.html" class="m-btn"><i>👤</i><span>پروفایل</span></a>
+</div>
+
+<div class="info-section">
+    <div class="section-title">📢 <span>د ادارې خبرتیاوې</span></div>
+    <div id="adminAlerts">
+        <div class="alert-box">
+            <p>سبا ته د ښوونکو میاشتنۍ غونډه ده، ګډون حتمي دی.</p>
+            <span class="alert-date">۱۴۰۴/۱۰/۲۰</span>
+        </div>
+        <div class="alert-box">
+            <p>د آزموینې پارچې باید تر پنجشنبې پورې ادارې ته تسلیم شي.</p>
+            <span class="alert-date">۱۴۰۴/۱۰/۱۸</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const userName = localStorage.getItem('userName');
+        const userPhoto = localStorage.getItem('userPhoto');
+
+        if (isLoggedIn !== 'true') {
+            window.location.replace('login.html');
+        } else {
+            document.getElementById('teacherName').innerText = "استاد " + userName;
+            if (userPhoto && userPhoto !== "") {
+                document.getElementById('teacherPhoto').src = userPhoto;
+            }
+        }
+    }
+
+    function logout() {
+        localStorage.clear();
+        window.location.replace('login.html');
+    }
+</script>
+
+</body>
+</html>

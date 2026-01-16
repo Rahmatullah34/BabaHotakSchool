@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د کارونکي ډول وټاکئ - بابا هوتک لیسه</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .selection-card { background: white; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 350px; }
+        .role-btn { background-color: #ffffff; color: #4A90E2; border: 2px solid #4A90E2; padding: 15px; border-radius: 15px; margin: 10px 0; cursor: pointer; font-size: 18px; font-weight: bold; width: 100%; transition: 0.3s; display: block; }
+        .role-btn:hover { background-color: #4A90E2; color: white; }
+        .admin-btn { background-color: #4A90E2; color: white; }
+        .admin-btn:hover { background-color: #357ABD; }
+        .logo { font-size: 60px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="selection-card">
+        <div class="logo">👤</div>
+        <h2 style="color: #2c3e50;">خپل رول وټاکئ</h2>
+        <p style="color: #7f8c8d; margin-bottom: 25px;">تاسو څوک یاست؟</p>
+
+        <button class="role-btn admin-btn" onclick="goToLogin('admin')">👨‍💼 مدیر صاحب</button>
+        <button class="role-btn" onclick="goToLogin('teacher')">👨‍🏫 ښوونکی</button>
+        <button class="role-btn" onclick="goToLogin('student')">👨‍🎓 زده‌کوونکی</button>
+
+        <button onclick="window.location.href='index.html'" style="margin-top: 20px; background: none; border: none; color: #95a5a6; cursor: pointer;">⬅️ شاته تګ</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ۱. فایربیس ترتیب
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+            authDomain: "babahotakschool.firebaseapp.com",
+            projectId: "babahotakschool",
+            storageBucket: "babahotakschool.firebasestorage.app",
+            messagingSenderId: "12958892996",
+            appId: "1:12958892996:web:477e44b4453a0fbd9b9a91",
+            measurementId: "G-28QZY65DZE"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // ۲. رول خوندي کول او لاګین پاڼې ته تګ
+        function goToLogin(role) {
+            localStorage.setItem('userRole', role); // دلته 'admin', 'teacher' یا 'student' ذخیره کېږي
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مدیریت کارمندان - بابا هوتک لیسه</title>
+    <!-- د فونټونو د چټک ښودلو لپاره بدلون -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #4A90E2; 
+            --success: #2ecc71; 
+            --danger: #e74c3c; 
+            --dark: #2c3e50;
+            --bg: #f4f7f6; 
+        }
+        
+        body { 
+            font-family: 'Noto Sans Arabic', sans-serif; 
+            background: var(--bg); 
+            margin: 0; 
+            padding: 10px; 
+            direction: rtl; 
+        }
+
+        .container { 
+            max-width: 1000px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1); 
+        }
+        
+        .photo-area { text-align: center; margin-bottom: 20px; grid-column: 1 / -1; }
+        #preview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 10px; background: #eee; }
+        .file-btn { background: #34495e; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; display: inline-block; font-size: 13px; }
+
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 12px; 
+            background: #fdfdfd; 
+            padding: 15px; 
+            border-radius: 15px; 
+            border: 1px solid #eee; 
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; padding: 10px; }
+            .container { padding: 12px; }
+            .filter-section { flex-direction: column; }
+            
+            table thead { display: none; }
+            table, table tbody, table tr, table td { display: block; width: 100%; }
+            table tr { margin-bottom: 12px; border: 1px solid #eee; border-radius: 12px; padding: 10px; background: #fff; }
+            table td { text-align: right; padding: 6px 0; border: none; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #f0f0f0; }
+            table td::before { content: attr(data-label); font-weight: bold; color: #666; font-size: 11px; }
+            .t-img { width: 50px; height: 50px; }
+        }
+
+        label { font-size: 12px; color: #555; font-weight: bold; margin-bottom: 4px; display: block; }
+        input, select { padding: 9px; border-radius: 8px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; text-align: center; outline: none; transition: 0.3s; font-family: inherit; font-size: 13px; }
+        input:focus { border-color: var(--primary); }
+
+        .btn-save { grid-column: 1 / -1; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 5px; font-family: inherit; }
+
+        .filter-section { margin-top: 25px; display: flex; gap: 8px; background: #eee; padding: 12px; border-radius: 12px; }
+        .search-input { flex: 2; font-family: inherit; }
+
+        .table-responsive { width: 100%; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; }
+        th { background: #34495e; color: white; padding: 10px; font-size: 13px; text-align: center; }
+        td { padding: 8px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px; }
+        .t-img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; }
+        
+        .status-active { color: var(--success); font-weight: bold; }
+        .status-inactive { color: var(--danger); font-weight: bold; }
+        
+        .action-btns button { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; margin: 2px; font-size: 14px; }
+        .view-btn { background: #3498db; color: white; }
+        .del-btn { background: #e74c3c; color: white; }
+
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.85); display: none; justify-content: center; 
+            align-items: center; z-index: 9999; padding: 20px;
+        }
+        .profile-card { 
+            background: white; width: 100%; max-width: 350px; border-radius: 20px; 
+            overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .card-header { background: var(--primary); height: 90px; position: relative; }
+        .card-close { position: absolute; left: 15px; top: 15px; color: white; font-size: 26px; cursor: pointer; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.1); border-radius: 50%; }
+        .card-photo-container { margin-top: -55px; text-align: center; position: relative; }
+        .card-photo { width: 110px; height: 110px; border-radius: 50%; border: 4px solid white; object-fit: cover; background: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card-body { padding: 15px 20px 25px 20px; text-align: center; }
+        .card-name { font-size: 20px; margin: 8px 0 4px 0; color: var(--dark); font-weight: bold; }
+        .card-tag { display: inline-block; padding: 4px 14px; background: #e3f2fd; color: var(--primary); border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 18px; }
+        .card-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .info-box { background: #fafafa; padding: 10px; border-radius: 12px; border: 1px solid #f0f0f0; }
+        .info-label { display: block; font-size: 10px; color: #999; margin-bottom: 2px; }
+        .info-value { display: block; font-size: 12px; color: #333; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2 style="color:var(--primary); margin:0;">👥 د کارمندانو او ښوونکو ثبت</h2>
+        <button onclick="location.href='admin_dashboard.html'" style="padding:6px 15px; border-radius:8px; cursor:pointer; border:1px solid #ddd; background:white; font-family:inherit;">⬅️ شاته</button>
+    </div>
+
+    <div class="form-grid">
+        <div class="photo-area">
+            <img id="preview" src="https://via.placeholder.com/100" alt="پروفایل"> <br>
+            <label class="file-btn">
+                📸 انتخاب عکس
+                <input type="file" id="tPhotoFile" accept="image/*" style="display:none" onchange="convertImage(this)">
+            </label>
+            <input type="hidden" id="tPhotoBase64">
+        </div>
+
+        <div><label>بشپړ نوم</label><input type="text" id="tName"></div>
+        <div><label>تخلص</label><input type="text" id="tLname"></div>
+        <div><label>د پلار نوم</label><input type="text" id="tFname"></div>
+        <div><label>تخصص</label><input type="text" id="tSubject"></div>
+
+        <div>
+            <label>زده کړې</label>
+            <select id="tEdu">
+                <option value="بکلوریا">بکلوریا</option>
+                <option value="۱۴ پاس">۱۴ پاس</option>
+                <option value="لیسانس">لیسانس</option>
+                <option value="ماستر">ماستر</option>
+            </select>
+        </div>
+
+        <div><label>د تقرر نېټه</label><input type="date" id="tJoinDate"></div>
+        <div><label>مکتوب نمبر</label><input type="text" id="tOrderNo"></div>
+
+        <div>
+            <label>رول (Role)</label>
+            <select id="tRole">
+                <option value="ښوونکی">ښوونکی</option>
+                <option value="مدیر">مدیر</option>
+                <option value="سرمعلم">سرمعلم</option>
+                <option value="اداري">اداري</option>
+            </select>
+        </div>
+
+        <div>
+            <label>مسؤل ټولګی (Grade)</label>
+            <select id="tGrade">
+                <option value="نشته">نشته</option>
+                <option value="1">اول</option><option value="2">دوهم</option><option value="3">دریم</option>
+                <option value="4">څلورم</option><option value="5">پنځم</option><option value="6">شپږم</option>
+                <option value="7">اووم</option><option value="8">اتم</option><option value="9">نهم</option>
+                <option value="10">لسم</option><option value="11">یوولسم</option><option value="12">دولسم</option>
+            </select>
+        </div>
+
+        <div>
+            <label>کټګوري (Section)</label>
+            <select id="tSection">
+                <option value="نشته">نشته</option>
+                <option value="A">الف (A)</option>
+                <option value="B">ب (B)</option>
+                <option value="C">ج (C)</option>
+                <option value="D">د (D)</option>
+            </select>
+        </div>
+
+        <div><label>یوزر نیم (Username)</label><input type="text" id="tUser"></div>
+        <div><label>پټ نوم (Password)</label><input type="text" id="tPass"></div>
+        <div><label>موبایل</label><input type="text" id="tPhone"></div>
+        <div><label>معاش</label><input type="number" id="tSalary"></div>
+        <div>
+            <label>حالت</label>
+            <select id="tStatus">
+                <option value="Active">فعال</option>
+                <option value="Inactive">غیرفعال</option>
+            </select>
+        </div>
+
+        <button class="btn-save" onclick="saveToFirebase()">💾 معلومات خوندي کړه</button>
+    </div>
+
+    <div class="filter-section">
+        <input type="text" id="searchName" class="search-input" placeholder="🔍 لټون..." oninput="filterTable()">
+        <select id="filterRole" onchange="filterTable()" style="flex:1; font-family: inherit;">
+            <option value="">ټول رولونه</option>
+            <option value="ښوونکی">ښوونکی</option>
+            <option value="مدیر">مدیر</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>عکس</th>
+                    <th>نوم او پلار</th>
+                    <th>مکتوب / رول</th>
+                    <th>حالت</th>
+                    <th>عمل</th>
+                </tr>
+            </thead>
+            <tbody id="teacherTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay" onclick="event.target == this ? closeProfile() : null">
+    <div class="profile-card">
+        <div class="card-header"><span class="card-close" onclick="closeProfile()">×</span></div>
+        <div class="card-photo-container"><img id="cardPhoto" src="" class="card-photo"></div>
+        <div class="card-body">
+            <div id="cardName" class="card-name"></div>
+            <div id="cardTag" class="card-tag"></div>
+            <div class="card-info" id="cardInfoContent"></div>
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button class="btn-save" style="background:#34495e; font-size:13px; flex:1;" onclick="window.print()">🖨️ چاپ</button>
+                <button class="btn-save" style="background:var(--danger); font-size:13px; flex:1;" onclick="closeProfile()">بندول</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    let staffData = [];
+
+    // د عکس د حجم کمولو اصلاح شوې فنکشن
+    function convertImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    // کوچنی سایز (۱۸۰ پیکسل) د اپلیکیشن د سرعت لپاره
+                    const size = 180;
+                    canvas.width = size; canvas.height = size;
+                    ctx.drawImage(img, 0, 0, size, size);
+                    // کیفیت ۰.۶ ته راښکته کول ترڅو حجم خورا کم شي
+                    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+                    document.getElementById('preview').src = base64;
+                    document.getElementById('tPhotoBase64').value = base64;
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    async function saveToFirebase() {
+        const btn = document.querySelector('.btn-save');
+        const data = {
+            photo: document.getElementById('tPhotoBase64').value || "",
+            name: document.getElementById('tName').value,
+            lname: document.getElementById('tLname').value,
+            fname: document.getElementById('tFname').value,
+            subject: document.getElementById('tSubject').value,
+            edu: document.getElementById('tEdu').value,
+            joinDate: document.getElementById('tJoinDate').value,
+            orderNo: document.getElementById('tOrderNo').value,
+            role: document.getElementById('tRole').value,
+            grade: document.getElementById('tGrade').value,
+            section: document.getElementById('tSection').value,
+            username: document.getElementById('tUser').value,
+            password: document.getElementById('tPass').value,
+            phone: document.getElementById('tPhone').value,
+            salary: document.getElementById('tSalary').value,
+            status: document.getElementById('tStatus').value,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if(!data.name || !data.username || !data.password) return alert("نوم، یوزرنیم او پاسورډ اړین دي!");
+        
+        btn.disabled = true;
+        btn.innerText = "صبر وکړئ...";
+
+        try {
+            await db.collection("babaTeachers").add(data);
+            alert("✅ معلومات خوندي شول!");
+            location.reload();
+        } catch (e) { 
+            alert("خطا: " + e.message); 
+            btn.disabled = false;
+        }
+    }
+
+    function filterTable() {
+        const nameVal = document.getElementById('searchName').value.toLowerCase();
+        const roleVal = document.getElementById('filterRole').value;
+        renderTable(staffData.filter(t => 
+            (t.name.toLowerCase().includes(nameVal) || (t.orderNo && t.orderNo.toLowerCase().includes(nameVal))) &&
+            (roleVal === "" || t.role === roleVal)
+        ));
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('teacherTableBody');
+        tbody.innerHTML = data.map(t => {
+            const statusClass = t.status === 'Active' ? 'status-active' : 'status-inactive';
+            return `
+                <tr>
+                    <td data-label="عکس"><img src="${t.photo || 'https://via.placeholder.com/45'}" class="t-img"></td>
+                    <td data-label="نوم او پلار"><b>${t.name} ${t.lname || ''}</b><br><small>${t.fname}</small></td>
+                    <td data-label="مکتوب / رول">${t.orderNo || '---'}<br><small>${t.role} (${t.grade}-${t.section})</small></td>
+                    <td data-label="حالت" class="${statusClass}">${t.status == 'Active' ? 'فعال' : 'غیرفعال'}</td>
+                    <td data-label="عمل" class="action-btns">
+                        <button class="view-btn" onclick="showProfile('${t.id}')">👁️</button>
+                        <button class="del-btn" onclick="deleteT('${t.id}')">🗑️</button>
+                    </td>
+                </tr>`;
+        }).join('');
+    }
+
+    db.collection("babaTeachers").orderBy("createdAt", "desc").onSnapshot(snap => {
+        staffData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderTable(staffData);
+    });
+
+    function showProfile(id) {
+        const t = staffData.find(x => x.id === id);
+        document.getElementById('cardPhoto').src = t.photo || 'https://via.placeholder.com/100';
+        document.getElementById('cardName').innerText = t.name + " " + (t.lname || "");
+        document.getElementById('cardTag').innerText = t.role + " - ټولګی (" + t.grade + t.section + ")";
+        
+        const infoFields = [
+            { label: "د پلار نوم", value: t.fname },
+            { label: "موبایل", value: t.phone },
+            { label: "یوزرنیم", value: t.username },
+            { label: "پاسورډ", value: t.password },
+            { label: "معاش", value: t.salary + " AFN" },
+            { label: "مکتوب نمبر", value: t.orderNo }
+        ];
+
+        document.getElementById('cardInfoContent').innerHTML = infoFields.map(f => `
+            <div class="info-box"><span class="info-label">${f.label}</span><span class="info-value">${f.value || '---'}</span></div>
+        `).join('');
+        document.getElementById('modalOverlay').style.display = 'flex';
+    }
+
+    function closeProfile() { document.getElementById('modalOverlay').style.display = 'none'; }
+    async function deleteT(id) { if(confirm("ایا دا کارمند حذف شي؟")) await db.collection("babaTeachers").doc(id).delete(); }
+</script>
+
+</body>
+</html>
+

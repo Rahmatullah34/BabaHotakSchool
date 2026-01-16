@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ازموینو مهالویش - بابا هوتک لیسه</title>
+    <style>
+        :root { --bg: #f0f2f5; --card: #fff; --text: #2c3e50; --primary: #f57c00; }
+        [data-theme="dark"] { --bg: #1a1a1a; --card: #2d2d2d; --text: #f0f2f5; }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; direction: rtl; transition: 0.3s; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: var(--card); padding: 25px; border-radius: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid var(--primary); }
+        
+        h2 { color: var(--primary); margin-bottom: 10px; }
+        
+        .upload-area { 
+            border: 2px dashed var(--primary); padding: 30px; border-radius: 20px; 
+            margin: 20px 0; cursor: pointer; background: rgba(245, 124, 0, 0.05);
+            transition: 0.2s;
+        }
+        .upload-area:hover { background: rgba(245, 124, 0, 0.1); }
+        
+        #preview { max-width: 100%; border-radius: 15px; margin-bottom: 15px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        .btn-upload { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; transition: 0.3s; }
+        .btn-upload:hover { background: #e65100; transform: translateY(-2px); }
+        
+        .status-msg { margin-top: 15px; font-size: 14px; font-weight: bold; display: none; }
+        
+        .current-exam-box { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+        #currentExamImg { max-width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid #ccc; }
+        
+        .btn-back { display: inline-block; margin-top: 20px; color: #7f8c8d; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>📝 د ازموینو مهالویش مدیریت</h2>
+        <p>د ازموینو نوی تقسیم اوقات یا جدول دلته اپلوډ کړئ.</p>
+        
+        <div class="upload-area" onclick="document.getElementById('examFile').click()">
+            <p id="uploadText">📁 د عکس انتخابولو لپاره دلته کلیک وکړئ</p>
+            <input type="file" id="examFile" accept="image/*" style="display: none;" onchange="showPreview()">
+        </div>
+
+        <img id="preview" src="">
+        
+        <div id="status" class="status-msg"></div>
+        
+        <button class="btn-upload" onclick="uploadExamSchedule()">پورته کول او خپرول 🚀</button>
+        
+        <div class="current-exam-box">
+            <h3 style="font-size: 16px;">اوسنی نشر شوی مهالویش:</h3>
+            <img id="currentExamImg" src="https://via.placeholder.com/400x200?text=No+Schedule+Uploaded" alt="مهالویش نشته">
+        </div>
+        
+        <a href="admin_dashboard.html" class="btn-back">🔙 بیرته ډشبورډ ته</a>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+
+<script>
+// فایربیس تنظیمات
+const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// ډارک موډ چک کول
+if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+
+// د انتخاب شوي عکس ښودل
+function showPreview() {
+    const file = document.getElementById('examFile').files[0];
+    const preview = document.getElementById('preview');
+    const uploadText = document.getElementById('uploadText');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            uploadText.innerText = "فایل انتخاب شو: " + file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// د عکس اپلوډ کول
+async function uploadExamSchedule() {
+    const file = document.getElementById('examFile').files[0];
+    const status = document.getElementById('status');
+    
+    if (!file) {
+        alert("لطفاً یو عکس انتخاب کړئ!");
+        return;
+    }
+
+    status.style.display = 'block';
+    status.style.color = '#3498db';
+    status.innerText = "د اپلوډ کېدو په حال کې دی... ⏳";
+
+    const storageRef = storage.ref('exams/exam_schedule.jpg');
+
+    try {
+        // ۱. سټوریج ته اپلوډ کول
+        await storageRef.put(file);
+        // ۲. د عکس لینک اخیستل
+        const downloadURL = await storageRef.getDownloadURL();
+        // ۳. په فایرسټور کې د لینک اپډېټ کول
+        await db.collection("schoolData").doc("examSchedule").set({
+            url: downloadURL,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        status.style.color = '#27ae60';
+        status.innerText = "مهالویش په بریالیتوب سره نشر شو! ✅";
+        setTimeout(() => location.reload(), 2000);
+    } catch (error) {
+        console.error(error);
+        status.style.color = '#e74c3c';
+        status.innerText = "تېروتنه: فایل اپلوډ نه شو.";
+    }
+}
+
+// د اوسني مهالویش راوستل
+db.collection("schoolData").doc("examSchedule").get().then(doc => {
+    if (doc.exists) {
+        document.getElementById('currentExamImg').src = doc.data().url;
+    }
+});
+</script>
+</body>
+</html>

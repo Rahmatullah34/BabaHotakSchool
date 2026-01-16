@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زما نمرې - بابا هوتک لیسه</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Tahoma', sans-serif; background-color: #f4f7f6; margin: 0; padding: 15px; direction: rtl; }
+        .result-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 600px; margin: auto; border-top: 5px solid #27ae60; }
+        
+        /* د خبرتیا سټایل */
+        #notice-box { display: none; background: #fff9c4; padding: 15px; border-right: 5px solid #fbc02d; border-radius: 10px; max-width: 600px; margin: 0 auto 15px auto; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .st-bio { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f9f9f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; border: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #27ae60; color: white; }
+        .summary-box { background: #e8f5e9; padding: 15px; border-radius: 10px; font-weight: bold; border-right: 5px solid #27ae60; }
+        .loading { text-align: center; font-weight: bold; color: #666; padding: 50px; font-size: 18px; }
+        .fail { color: red; }
+        .pass { color: green; }
+        .lock-text { color: #e74c3c; font-size: 11px; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+<div id="notice-box">
+    <strong>📢 خبرتیا:</strong> <span id="notice-msg"></span>
+    <div style="font-size: 10px; color: #888; margin-top: 5px;" id="notice-date"></div>
+</div>
+
+<div id="loading" class="loading">ستاسو نمرې له سیسټم څخه راوړل کېږي...</div>
+
+<div class="result-card" id="main-card" style="display:none;">
+    <div class="header">
+        <h3 style="margin:0; color:#2c3e50;">ګرانه زده کوونکیه ستاسو د (۱۴۰۴) کال نمرې دي.</h3>
+        <p style="margin:5px 0; color:#27ae60; font-weight: bold;">باباهوتک دویم نمبر عالي لیسه</p>
+    </div>
+
+    <div class="st-bio">
+        <div><strong>نوم:</strong> <span id="v-name"></span></div>
+        <div><strong>پلار نوم:</strong> <span id="v-father"></span></div>
+        <div><strong>اساس نمبر:</strong> <span id="v-id" style="color:red; font-weight: bold;"></span></div>
+        <div><strong>نیکه نوم:</strong> <span id="v-grand"></span></div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>مضمون</th>
+                <th>۴.۵ میاشتنۍ</th>
+                <th>کلنۍ نمرې</th>
+                <th>مجموعه</th>
+            </tr>
+        </thead>
+        <tbody id="v-marks-body"></tbody>
+    </table>
+
+    <div class="summary-box">
+        <div id="v-result-text">پایله: <span id="v-result">---</span></div>
+        <div>عمومي درجه: <span id="v-grade">---</span></div>
+        <div>د حاضرۍ سوب: <span id="v-att">0</span> ورځې</div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const fs = firebase.firestore();
+
+    const studentId = localStorage.getItem('userId');
+
+    // ۱. د خبرتیا راوړل
+    async function loadNotice() {
+        const snap = await fs.collection("systemSettings").doc("schoolNotice").get();
+        if(snap.exists) {
+            document.getElementById('notice-msg').innerText = snap.data().message;
+            document.getElementById('notice-date').innerText = "نېټه: " + snap.data().date;
+            document.getElementById('notice-box').style.display = 'block';
+        }
+    }
+
+    // ۲. د نمرو راوړل
+    async function loadMyResults() {
+        if (!studentId) {
+            document.getElementById('loading').innerHTML = "⚠️ تاسو لاګ ان نه یاست.";
+            return;
+        }
+
+        try {
+            // چک کول چې ایا نتایج خلاص دي که پټ؟
+            const settingsSnap = await fs.collection("systemSettings").doc("resultsConfig").get();
+            const showFinal = settingsSnap.exists ? settingsSnap.data().showFinalResults : false;
+
+            const docRef = fs.collection("studentMarks").doc(studentId);
+            const docSnap = await docRef.get();
+
+            if (docSnap.exists) {
+                const data = docSnap.data();
+
+                document.getElementById('v-name').innerText = data.info.name;
+                document.getElementById('v-father').innerText = data.info.father;
+                document.getElementById('v-id').innerText = data.info.id;
+                document.getElementById('v-grand').innerText = data.info.grand || '---';
+
+                const tbody = document.getElementById('v-marks-body');
+                tbody.innerHTML = "";
+                
+                for (let sub in data.marks) {
+                    let m = data.marks[sub];
+                    let finalMark = showFinal ? m.mAn : '<span class="lock-text">🔒 پټ</span>';
+                    let totalMark = showFinal ? m.total : '---';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align:right; font-weight:bold;">${sub}</td>
+                            <td>${m.m45}</td>
+                            <td>${finalMark}</td>
+                            <td style="font-weight:bold; color:#1565c0;">${totalMark}</td>
+                        </tr>
+                    `;
+                }
+
+                if (showFinal) {
+                    const res = data.summary.final_status || "---";
+                    document.getElementById('v-result').innerText = res;
+                    document.getElementById('v-grade').innerText = data.summary.fin_grade || "---";
+                    document.getElementById('v-att').innerText = data.attendance.pTotal || 0;
+                    document.getElementById('v-result').className = (res.includes("تکرار") || res.includes("ناکام")) ? "fail" : "pass";
+                } else {
+                    document.getElementById('v-result').innerText = "یوازې ۴.۵ میاشتنۍ اعلان شوې";
+                    document.getElementById('v-grade').innerText = data.summary.mid_grade || "---";
+                    document.getElementById('v-att').innerText = data.attendance.p45 || 0;
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('main-card').style.display = 'block';
+
+            } else {
+                document.getElementById('loading').innerHTML = "🔍 نمرې لا نه دي ثبت شوې.";
+            }
+        } catch (error) {
+            document.getElementById('loading').innerHTML = "❌ تخنیکي تېروتنه.";
+        }
+    }
+
+    window.onload = () => {
+        loadMyResults();
+        loadNotice();
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بابا هوتک دویم نمبر عالي لیسه - ننوتل</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f1f5f9;
+            --input-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            direction: rtl;
+        }
+
+        .welcome-card {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            min-height: 520px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .school-logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            border: 3px solid var(--primary);
+            padding: 4px;
+        }
+
+        .school-title {
+            color: #1e293b;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 35px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .lang-item {
+            padding: 15px 20px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            background: var(--input-bg);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .lang-item:focus {
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .toggle-pass {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #94a3b8;
+        }
+
+        .main-action-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+
+        .main-action-btn:hover {
+            background-color: #1d4ed8;
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .forgot-link {
+            display: block;
+            margin-top: 25px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .forgot-link span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .forgot-link:hover span {
+            text-decoration: underline;
+        }
+
+        #error-msg {
+            font-size: 14px;
+            color: #ef4444;
+            margin-top: 20px;
+            min-height: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="welcome-card">
+    <img src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'" class="school-logo" alt="Logo">
+    <h2 class="school-title">بابا هوتک دویم نمبر عالي لیسه</h2>
+    
+    <div class="login-form">
+        <div class="input-group">
+            <input type="text" id="user-field" placeholder="کارن نوم یا موبایل" class="lang-item">
+        </div>
+        <div class="input-group">
+            <input type="password" id="pass-field" placeholder="پټ نوم (پاسورډ)" class="lang-item">
+            <i class="fas fa-eye toggle-pass" id="eyeIcon"></i>
+        </div>
+        <button id="loginBtn" onclick="handleLogin()" class="main-action-btn">ننو تل</button>
+        <a href="#" class="forgot-link" onclick="alert('مهرباني وکړئ د خپل پټ نوم د بېرته ترلاسه کولو لپاره د مکتب له ادارې یا ای ټي (IT) برخې سره اړیکه ونیسئ.')">
+            پټ نوم مو هېر شوی؟ <span>دلته کلیک وکړئ</span>
+        </a>
+        <div id="error-msg"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+    authDomain: "babahotakschool.firebaseapp.com",
+    projectId: "babahotakschool",
+    storageBucket: "babahotakschool.firebasestorage.app",
+    messagingSenderId: "12958892996",
+    appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+  };
+    
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const eyeIcon = document.getElementById('eyeIcon');
+  const passField = document.getElementById('pass-field');
+
+  eyeIcon.addEventListener('click', () => {
+      const type = passField.type === 'password' ? 'text' : 'password';
+      passField.type = type;
+      eyeIcon.classList.toggle('fa-eye-slash');
+  });
+
+  async function handleLogin() {
+      const userInput = document.getElementById('user-field').value.trim();
+      const passInput = document.getElementById('pass-field').value.trim();
+      const errorMsg = document.getElementById('error-msg');
+      const btn = document.getElementById('loginBtn');
+        
+      if (!userInput || !passInput) { 
+          errorMsg.innerText = "🛑 معلومات ولیکئ!"; 
+          return; 
+      }
+
+      btn.disabled = true;
+      btn.innerText = "د تایید په حال کې...";
+
+      try {
+          // ۱. د اډمینانو چک کول (Super Admin او نوي مدیران)
+          // لومړی ستا پخوانی Credentials سند ګوري
+          const adminDoc = await db.collection("adminConfig").doc("credentials").get();
+          if (adminDoc.exists && adminDoc.data().username === userInput && String(adminDoc.data().password) === String(passInput)) {
+              saveAndRedirect('admin', adminDoc.id, 'مدیر صاحب', 'admin_dashboard.html');
+              return;
+          }
+          // که په هغه کې نه و، بیا نور اډمینان د username په اساس پهadminConfig کې لټوي
+          const otherAdmin = await db.collection("adminConfig").where("username", "==", userInput).get();
+          if (!otherAdmin.empty) {
+              const aData = otherAdmin.docs[0].data();
+              if (String(aData.password) === String(passInput)) {
+                  saveAndRedirect('admin', otherAdmin.docs[0].id, 'مدیر صاحب', 'admin_dashboard.html');
+                  return;
+              }
+          }
+
+          // ۲. د ښوونکو چک کول (کټ مټ په پخواني ډول)
+          const teacherQuery = await db.collection("babaTeachers").where("username", "==", userInput).get();
+          let finalTQuery = teacherQuery;
+          if (teacherQuery.empty) finalTQuery = await db.collection("babaTeachers").where("phone", "==", userInput).get();
+          
+          if (!finalTQuery.empty) {
+              const tData = finalTQuery.docs[0].data();
+              if (String(tData.password) === String(passInput)) {
+                  saveAndRedirect('teacher', finalTQuery.docs[0].id, tData.name, 'teacher_dashboard.html');
+                  return;
+              }
+          }
+
+          // ۳. د زده کوونکو چک کول (کټ مټ په پخواني ډول)
+          const studentQuery = await db.collection("babaStudents").where("phone", "==", userInput).get();
+          if (!studentQuery.empty) {
+              const sData = studentQuery.docs[0].data();
+              if (String(sData.studentId) === String(passInput)) {
+                  saveAndRedirect('student', studentQuery.docs[0].id, sData.name, 'student_dashboard.html');
+                  return;
+              }
+          }
+
+          errorMsg.innerText = "❌ کارن نوم یا پټ نوم غلط دی!";
+          btn.disabled = false;
+          btn.innerText = "ننو تل";
+      } catch (error) {
+          errorMsg.innerText = "❌ سیسټم کې ستونزه ده!";
+          btn.disabled = false;
+          btn.innerText = "ننو تل";
+      }
+  }
+
+  function saveAndRedirect(role, id, name, targetPage) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userRole', role);
+      localStorage.setItem('userId', id);
+      localStorage.setItem('userName', name);
+      window.location.replace(targetPage);
+  }
+</script>
+</body>
+</html>

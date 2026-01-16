@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د بابا هوتک لیسې جامع سیسټم</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        body { font-family: 'Tahoma', sans-serif; background-color: #f0f4f8; margin: 0; padding: 10px; direction: rtl; }
+        .selector-box { background: #004d99; color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
+        select { padding: 10px; border-radius: 8px; width: 95%; font-size: 16px; margin-top: 10px; }
+        .student-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 25px; border-top: 5px solid #27ae60; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .student-header { background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #eee; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #f0f7f2; color: #27ae60; }
+        input[type="number"], input[type="text"] { width: 60px; border: 1px solid #ccc; border-radius: 4px; padding: 5px; text-align: center; outline: none; }
+        .st-input { width: 110px !important; text-align: right !important; }
+        .fail-bg { background-color: #ffcdd2 !important; } 
+        .res-section { padding: 10px; border-radius: 8px; border: 1px solid #ccc; background: #fff; margin-top: 10px; }
+        .mid-style { border-right: 5px solid #ffd600; }
+        .final-style { border-right: 5px solid #27ae60; }
+        .title-sm { font-size: 13px; font-weight: bold; color: #27ae60; display: block; margin-bottom: 8px; border-bottom: 1px solid #eee; }
+        .att-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 5px; }
+        .att-item label { font-size: 10px; display: block; text-align: center; margin-bottom: 2px; }
+        .att-item input { width: 100%; font-size: 12px; box-sizing: border-box; }
+        .present-box { background-color: #e8f5e9; font-weight: bold; }
+        .debarred-input { width: 100% !important; background: #fffde7; color: red; font-weight: bold; }
+        .btn-save { background-color: #27ae60; color: white; border: none; padding: 18px; width: 100%; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="selector-box">
+    <label>د خپل صنف شاګرد انتخاب کړئ:</label><br>
+    <select id="studentSelector" onchange="fillStudentData()">
+        <option value="">لوډېږي...</option>
+    </select>
+</div>
+
+<div class="student-card">
+    <div class="student-header">
+        <div class="info-grid">
+            <div>نوم: <input type="text" id="st-name" class="st-input"></div>
+            <div>پلار نوم: <input type="text" id="st-father" class="st-input"></div>
+            <div>اساس نمبر: <input type="number" id="st-id" class="st-input" style="color:red; font-weight:bold;"></div>
+            <div>نیکه نوم: <input type="text" id="st-grand" class="st-input"></div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>مضمون</th>
+                <th style="background:#fff9c4">څلورنیم (40)</th>
+                <th style="background:#c8e6c9">کلنۍ (60)</th>
+                <th>ټولې نمرې</th>
+            </tr>
+        </thead>
+        <tbody id="marks-body">
+            <script>
+                const subjects = ["قرانکریم", "دیني ښوونه", "تجوید", "پښتو", "دري", "عربي", "انګلیسي", "ریاضي", "فزیک", "کیمیا", "بیولوژي", "تاریخ", "جغرافیه", "مدني", "کمپیوټر", "حرفه", "سپورت", "تهذیب"];
+                subjects.forEach(sub => {
+                    document.write(`
+                        <tr data-subject="${sub}">
+                            <td style="text-align:right; font-weight:bold;">${sub}</td>
+                            <td><input type="number" class="m45" max="40" oninput="validateAndCalc(this, 40)"></td>
+                            <td><input type="number" class="mAn" max="60" oninput="validateAndCalc(this, 60)"></td>
+                            <td class="total-cell" style="font-weight:bold; color:#1565c0;"></td>
+                        </tr>
+                    `);
+                });
+            </script>
+            <tr style="background: #f9f9f9;">
+                <td style="text-align:right; font-weight:bold; color:red;">حالت (محروم؟)</td>
+                <td><input type="text" id="deb-mid" placeholder="م" class="debarred-input" oninput="calculate()"></td>
+                <td><input type="text" id="deb-fin" placeholder="م" class="debarred-input" oninput="calculate()"></td>
+                <td>---</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="res-section mid-style">
+        <span class="title-sm">څلورنیم میاشتنۍ پایلې:</span>
+        <div style="font-size:13px; margin-bottom:5px;">
+            ټولې نمرې: <span id="mid-sum" style="font-weight:bold;">0</span> | 
+            اوسط: <span id="mid-avg" style="font-weight:bold;">0</span> | 
+            پایله: <span id="mid-status" style="font-weight:bold;">---</span> | 
+            درجه: <span id="mid-grade" style="font-weight:bold;">---</span>
+        </div>
+        <div class="att-grid">
+            <div class="att-item"><label>ورځې</label><input type="number" id="days45" oninput="updateAtt()"></div>
+            <div class="att-item"><label>ناسوب</label><input type="number" id="a45" oninput="updateAtt()"></div>
+            <div class="att-item"><label>ناروغ</label><input type="number" id="s45" oninput="updateAtt()"></div>
+            <div class="att-item"><label>رخصت</label><input type="number" id="l45" oninput="updateAtt()"></div>
+            <div class="att-item"><label>سوب</label><input type="number" id="p45" class="present-box" readonly></div>
+        </div>
+    </div>
+
+    <div class="res-section final-style">
+        <span class="title-sm">وروستۍ پایلې:</span>
+        <div style="font-size:13px; margin-bottom:5px;">
+            ټولې نمرې: <span id="fin-sum" style="font-weight:bold;">0</span> | 
+            اوسط: <span id="fin-avg" style="font-weight:bold;">0</span> | 
+            پایله: <span id="fin-status" style="font-weight:bold;">---</span> | 
+            درجه: <span id="fin-grade" style="font-weight:bold;">---</span>
+        </div>
+        <div class="att-grid">
+            <div class="att-item"><label>کلنۍ ورځې</label><input type="number" id="daysAn" oninput="updateAtt()"></div>
+            <div class="att-item"><label>ناسوب</label><input type="number" id="aAn" oninput="updateAtt()"></div>
+            <div class="att-item"><label>ناروغ</label><input type="number" id="sAn" oninput="updateAtt()"></div>
+            <div class="att-item"><label>رخصت</label><input type="number" id="lAn" oninput="updateAtt()"></div>
+            <div class="att-item"><label>مجموعي سوب</label><input type="number" id="pFin" class="present-box" readonly></div>
+        </div>
+    </div>
+
+    <button class="btn-save" id="btnSave" onclick="saveData()">💾 ډیټا په فایربیس کې ذخیره کړه</button>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        projectId: "babahotakschool",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const fs = firebase.firestore();
+
+    let studentList = {};
+
+    async function loadStudents() {
+        const teacherId = localStorage.getItem('userId');
+        if (!teacherId) return;
+        try {
+            const tDoc = await fs.collection("babaTeachers").doc(teacherId).get();
+            if (tDoc.exists) {
+                const { grade, section } = tDoc.data();
+                const snap = await fs.collection("babaStudents")
+                    .where("grade", "==", grade)
+                    .where("section", "==", section.split(' ')[0])
+                    .get();
+                
+                const sel = document.getElementById('studentSelector');
+                sel.innerHTML = '<option value="">شاګرد انتخاب کړئ</option>';
+                snap.forEach(doc => {
+                    studentList[doc.id] = doc.data();
+                    sel.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+                });
+            }
+        } catch (e) { console.error("Error loading students:", e); }
+    }
+
+    function fillStudentData() {
+        resetForm(); // مخکې له ډکولو ټول پخواني معلومات پاک کړئ
+        const id = document.getElementById('studentSelector').value;
+        if (!id) return;
+        const s = studentList[id];
+        document.getElementById('st-name').value = s.name;
+        document.getElementById('st-father').value = s.fname || s.father || '';
+        document.getElementById('st-id').value = s.id || id;
+        document.getElementById('st-grand').value = s.gname || '';
+    }
+
+    function validateAndCalc(el, limit) {
+        if (parseFloat(el.value) > limit) el.value = limit;
+        calculate();
+    }
+
+    function calculate() {
+        let rows = document.querySelectorAll('#marks-body tr[data-subject]');
+        let mSum = 0, mCount = 0, mFail = false;
+        let fSum = 0, fCount = 0, fFailCount = 0;
+
+        let debMid = document.getElementById('deb-mid').value.trim();
+        let debFin = document.getElementById('deb-fin').value.trim();
+
+        rows.forEach(row => {
+            let v45 = parseFloat(row.querySelector('.m45').value) || 0;
+            let vAn = parseFloat(row.querySelector('.mAn').value) || 0;
+            
+            if(row.querySelector('.m45').value !== "") {
+                mSum += v45; mCount++;
+                if(v45 < 16) mFail = true;
+            }
+
+            let tCell = row.querySelector('.total-cell');
+            if(row.querySelector('.mAn').value !== "") {
+                let total = v45 + vAn;
+                tCell.innerText = total;
+                fSum += total; fCount++;
+                if(total < 40) { fFailCount++; tCell.classList.add('fail-bg'); }
+                else tCell.classList.remove('fail-bg');
+            } else tCell.innerText = "";
+        });
+
+        // څلورنیم میاشتنۍ منطق
+        let midS = document.getElementById('mid-status'), midG = document.getElementById('mid-grade');
+        if(debMid === "م" || debMid === "محروم") {
+            midS.innerText = "محروم"; midS.style.color="red"; midG.innerText = "";
+            document.getElementById('mid-sum').innerText = "0"; document.getElementById('mid-avg').innerText = "0";
+        } else if(mCount > 0) {
+            let avg = mSum / mCount;
+            document.getElementById('mid-sum').innerText = mSum;
+            document.getElementById('mid-avg').innerText = avg.toFixed(2);
+            if(avg >= 20 && !mFail) {
+                midS.innerText = "بریالی"; midS.style.color="green";
+                midG.innerText = avg >= 36 ? "الف" : (avg >= 30 ? "ب" : (avg >= 24 ? "ج" : "د"));
+            } else { midS.innerText = "لازیاته هڅه"; midS.style.color="red"; midG.innerText = "هـ"; }
+        }
+
+        // کلنۍ منطق
+        let finS = document.getElementById('fin-status'), finG = document.getElementById('fin-grade');
+        if(debFin === "م" || debFin === "محروم") {
+            finS.innerText = "محروم"; finS.style.color="red"; finG.innerText = "";
+            document.getElementById('fin-sum').innerText = "0"; document.getElementById('fin-avg').innerText = "0";
+        } else if(fCount > 0) {
+            let avg = fSum / fCount;
+            document.getElementById('fin-sum').innerText = fSum;
+            document.getElementById('fin-avg').innerText = avg.toFixed(2);
+            if(avg >= 50 && fFailCount === 0) {
+                finS.innerText = "د ټولګي لورتیا"; finS.style.color="green";
+                finG.innerText = avg >= 90 ? "الف" : (avg >= 75 ? "ب" : (avg >= 60 ? "ج" : "د"));
+            } else if(avg >= 50 && fFailCount <= 3) { finS.innerText = "مشروط"; finS.style.color="orange"; finG.innerText = "هـ"; }
+            else { finS.innerText = "د ټولګي تکرار"; finS.style.color="red"; finG.innerText = "هـ"; }
+        }
+    }
+
+    function updateAtt() {
+        let d45 = parseFloat(document.getElementById('days45').value) || 0;
+        let a45 = parseFloat(document.getElementById('a45').value) || 0;
+        let s45 = parseFloat(document.getElementById('s45').value) || 0;
+        let l45 = parseFloat(document.getElementById('l45').value) || 0;
+        document.getElementById('p45').value = d45 - (a45 + s45 + l45);
+
+        let dAn = parseFloat(document.getElementById('daysAn').value) || 0;
+        let aAn = parseFloat(document.getElementById('aAn').value) || 0;
+        let sAn = parseFloat(document.getElementById('sAn').value) || 0;
+        let lAn = parseFloat(document.getElementById('lAn').value) || 0;
+        document.getElementById('pFin').value = (d45 + dAn) - (a45 + aAn + s45 + sAn + l45 + lAn);
+    }
+
+    function resetForm() {
+        // نمرې پاکول
+        document.querySelectorAll('.m45, .mAn').forEach(i => i.value = "");
+        document.querySelectorAll('.total-cell').forEach(c => { c.innerText = ""; c.classList.remove('fail-bg'); });
+        // حاضري پاکول
+        document.querySelectorAll('.att-grid input').forEach(i => i.value = "");
+        // محرومیت پاکول
+        document.getElementById('deb-mid').value = "";
+        document.getElementById('deb-fin').value = "";
+        // پایلې پاکول
+        document.getElementById('mid-sum').innerText = "0"; document.getElementById('mid-avg').innerText = "0";
+        document.getElementById('fin-sum').innerText = "0"; document.getElementById('fin-avg').innerText = "0";
+        document.getElementById('mid-status').innerText = "---"; document.getElementById('mid-grade').innerText = "---";
+        document.getElementById('fin-status').innerText = "---"; document.getElementById('fin-grade').innerText = "---";
+    }
+
+    async function saveData() {
+        const id = document.getElementById('st-id').value;
+        const name = document.getElementById('st-name').value;
+        const btn = document.getElementById('btnSave');
+        
+        if(!id || !name) { alert("لطفاً لومړی یو شاګرد انتخاب کړئ!"); return; }
+
+        btn.disabled = true; btn.innerText = "ثبت کېږي...";
+
+        const marks = {};
+        document.querySelectorAll('#marks-body tr[data-subject]').forEach(row => {
+            const subject = row.dataset.subject;
+            marks[subject] = {
+                m45: row.querySelector('.m45').value || "0",
+                mAn: row.querySelector('.mAn').value || "0",
+                total: row.querySelector('.total-cell').innerText || "0"
+            };
+        });
+
+        const finalData = {
+            info: { name, father: document.getElementById('st-father').value, id },
+            marks: marks,
+            summary: {
+                mid_sum: document.getElementById('mid-sum').innerText,
+                mid_avg: document.getElementById('mid-avg').innerText,
+                mid_result: document.getElementById('mid-status').innerText,
+                mid_grade: document.getElementById('mid-grade').innerText,
+                fin_sum: document.getElementById('fin-sum').innerText,
+                fin_avg: document.getElementById('fin-avg').innerText,
+                fin_grade: document.getElementById('fin-grade').innerText,
+                final_status: document.getElementById('fin-status').innerText
+            },
+            attendance: {
+                p45: document.getElementById('p45').value || "0",
+                pTotal: document.getElementById('pFin').value || "0"
+            },
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            await fs.collection("studentMarks").doc(id).set(finalData);
+            alert("✅ د " + name + " نمرې په بریالیتوب سره ثبت شوې!");
+            resetForm(); // له ثبت وروسته صفحه پاکه کړه
+            document.getElementById('studentSelector').value = ""; // سلکټور خالي کړه
+        } catch (error) {
+            alert("❌ خطا: " + error.message);
+        } finally {
+            btn.disabled = false; btn.innerText = "💾 ډیټا په فایربیس کې ذخیره کړه";
+        }
+    }
+
+    window.onload = loadStudents;
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">د بابا هوتک لیسه</title>
+
+  <!-- موجودې References -->
+  <!-- Hybrid System -->
+  <link rel="stylesheet" href="/css/hybrid_styles.css">
+  <script src="/hybrid_system.js" defer></script>
+  <script src="/view_only_components.js" defer></script>
+  <script src="/offline_viewer.js" defer></script>
+
+  <style>
+    body { font-family: 'Segoe UI', Tahoma; background:#f0f4f8; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+    .card { background:white; padding:30px; border-radius:25px; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:center; width:350px; }
+    .logo { font-size:60px; margin-bottom:20px; }
+    .lang-btn { background-color:#fff; color:#4A90E2; border:2px solid #4A90E2; padding:12px; border-radius:15px; margin:8px 0; cursor:pointer; font-size:18px; font-weight:bold; width:100%; transition:0.3s; display:block; }
+    .lang-btn:hover { background-color:#4A90E2; color:white; }
+    .start-btn { background:#3498db; color:white; border:none; padding:12px; border-radius:12px; font-size:18px; font-weight:bold; margin-top:15px; cursor:pointer; width:100%; }
+    .footer { margin-top:20px; font-size:12px; color:#95a5a6; }
+  </style>
+</head>
+<body data-hybrid-system="enabled">
+
+  <div class="card">
+    <div class="logo">🎓</div>
+    <h2 id="titleText">بسم الله الرحمن الرحيم</h2>
+    <p id="descText">د بابا هوتک دوم نمبر عالي ليسي نوښتګر کاریال</p>
+    <p id="chooseLang">خپله ژبه وټاکئ:</p>
+
+    <button class="lang-btn" onclick="setLanguage('ps')">پښتو</button>
+    <button class="lang-btn" onclick="setLanguage('fa')">دري</button>
+    <button class="lang-btn" onclick="setLanguage('en')">English</button>
+
+    <button class="start-btn" onclick="startApp()" id="startBtn">پيل کول</button>
+    <div class="footer">ډيزاين او پراختيا: استاد رحمت الله علمي</div>
+  </div>
+
+  <script>
+    // ژبې جدول
+    const translations = {
+      ps: {
+        pageTitle: "د بابا هوتک لیسه",
+        titleText: "بسم الله الرحمن الرحيم",
+        descText: "د بابا هوتک دوم نمبر عالي ليسي نوښتګر کاریال",
+        chooseLang: "خپله ژبه وټاکئ:",
+        startBtn: "پيل کول"
+      },
+      fa: {
+        pageTitle: "لیسه بابا هوتک",
+        titleText: "بسم الله الرحمن الرحیم",
+        descText: "اپلیکیشن نوآور لیسه عالی بابا هوتک",
+        chooseLang: "زبان خود را انتخاب کنید:",
+        startBtn: "شروع"
+      },
+      en: {
+        pageTitle: "Baba Hotak School",
+        titleText: "In the name of Allah, the Merciful",
+        descText: "Baba Hotak High School Innovative Application",
+        chooseLang: "Select your language:",
+        startBtn: "Start"
+      }
+    };
+
+    // ژبه لوستل
+    const langCode = localStorage.getItem('appLang') || 'ps';
+    const LANG = translations[langCode];
+
+    // متنونه ځای پر ځای کول
+    document.getElementById('pageTitle').innerText = LANG.pageTitle;
+    document.getElementById('titleText').innerText = LANG.titleText;
+    document.getElementById('descText').innerText = LANG.descText;
+    document.getElementById('chooseLang').innerText = LANG.chooseLang;
+    document.getElementById('startBtn').innerText = LANG.startBtn;
+
+    // ژبه ټاکل
+    function setLanguage(code) {
+      localStorage.setItem('appLang', code);
+      location.reload();
+    }
+
+    // اپلیکیشن پیل
+    function startApp() {
+      window.location.href = "selection.html";
+    }
+  </script>
+</body>
+</html>

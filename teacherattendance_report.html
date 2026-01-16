@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ps" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>د ښوونکو میاشتنی راپور او معاشات</title>
+    <style>
+        :root { --primary: #2c3e50; --success: #27ae60; --danger: #e74c3c; --warning: #f39c12; }
+        body { font-family: 'Segoe UI', Tahoma; background: #f4f7f6; margin: 0; padding: 15px; direction: rtl; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #f9f9f9; padding: 15px; border-radius: 12px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        th { background: var(--primary); color: white; padding: 12px; position: sticky; top: 0; }
+        td { padding: 10px; border-bottom: 1px solid #eee; text-align: center; }
+        
+        /* پرګریس بار سټایل */
+        .progress-bg { background: #eee; border-radius: 10px; height: 10px; width: 100px; margin: auto; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: 0.5s; }
+        
+        .btn-export { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; margin-left: 5px; }
+        .excel-btn { background: #1f7244; }
+        .pdf-btn { background: #c0392b; }
+        .pay-btn { background: var(--success); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        
+        input, select { padding: 8px; border-radius: 8px; border: 1px solid #ddd; outline: none; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-area no-print">
+        <h2 style="margin:0; color: var(--primary);">📊 د ښوونکو د معاش او حاضري راپور</h2>
+        <div>
+            <button class="btn-export excel-btn" onclick="exportToExcel()">Excel 📥</button>
+            <button class="btn-export pdf-btn" onclick="window.print()">چاپ PDF 🖨️</button>
+        </div>
+    </div>
+
+    <div class="filter-row no-print">
+        <select id="monthFilter" onchange="generateReport()">
+            <option value="">میاشت وټاکئ</option>
+            <option value="1">حمل</option><option value="2">ثور</option><option value="3">جوزا</option>
+            <option value="4">سرطان</option><option value="5">اسد</option><option value="6">سنبله</option>
+            <option value="7">میزان</option><option value="8">عقرب</option><option value="9">قوس</option>
+        </select>
+        <input type="text" id="teacherSearch" placeholder="د ښوونکي نوم..." oninput="generateReport()">
+        <div style="text-align: left;"><a href="admin_dashboard.html" style="text-decoration:none; color:#7f8c8d;">⬅️ شاته تګ</a></div>
+    </div>
+
+    <table id="reportTable">
+        <thead>
+            <tr>
+                <th>د ښوونکي نوم</th>
+                <th>حاضري %</th>
+                <th>ټولې ورځې</th>
+                <th>حاضر</th>
+                <th>غیرحاضر</th>
+                <th>خنډ (دقیقه)</th>
+                <th>بنسټیز معاش</th>
+                <th>کسرات (افغانۍ)</th>
+                <th>نهايي معاش</th>
+                <th class="no-print">عملیه</th>
+            </tr>
+        </thead>
+        <tbody id="reportContent">
+            </tbody>
+    </table>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1SSjuFWV0Fjnpm6bjbK-6r-5qNdZPQsM",
+        authDomain: "babahotakschool.firebaseapp.com",
+        projectId: "babahotakschool",
+        storageBucket: "babahotakschool.firebasestorage.app",
+        messagingSenderId: "12958892996",
+        appId: "1:12958892996:web:477e44b4453a0fbd9b9a91"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function generateReport() {
+        const tbody = document.getElementById('reportContent');
+        const searchTerm = document.getElementById('teacherSearch').value.toLowerCase();
+        tbody.innerHTML = "<tr><td colspan='10'>د معلوماتو راټولول...</td></tr>";
+
+        try {
+            const tSnap = await db.collection("babaTeachers").get();
+            const aSnap = await db.collection("teacherAttendance").get();
+            
+            tbody.innerHTML = "";
+            
+            tSnap.forEach(tDoc => {
+                const teacher = tDoc.data();
+                if (searchTerm && !teacher.name.toLowerCase().includes(searchTerm)) return;
+
+                let present = 0, absent = 0, lateMin = 0;
+                let attendanceDocs = [];
+                
+                aSnap.forEach(aDoc => {
+                    const att = aDoc.data();
+                    if(att.teacherId === tDoc.id) {
+                        if(att.status === 'present' || att.status === 'late') present++;
+                        if(att.status === 'absent') absent++;
+                        lateMin += parseInt(att.lateMinutes || 0);
+                    }
+                });
+
+                const totalDays = present + absent;
+                const attRate = totalDays > 0 ? ((present / totalDays) * 100).toFixed(0) : 0;
+                
+                // --- د معاش محاسبه (Logic) ---
+                const baseSalary = parseInt(teacher.salary || 10000); // که معاش نه وي، ۱۰ زره فرض کړئ
+                const dailyCut = baseSalary / 30; // د یوې ورځې کسر
+                const lateCutPerMin = 2; // په هره دقیقه ۲ افغانۍ کسر (تغیرولی یې شئ)
+                
+                const totalDeduction = (absent * dailyCut) + (lateMin * lateCutPerMin);
+                const finalSalary = baseSalary - totalDeduction;
+
+                // د رنګونو ټاکل د فیصدي مطابق
+                const progressColor = attRate >= 90 ? 'var(--success)' : (attRate >= 70 ? 'var(--warning)' : 'var(--danger)');
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align:right;"><b>${teacher.name}</b></td>
+                        <td>
+                            <div class="progress-bg"><div class="progress-fill" style="width:${attRate}%; background:${progressColor};"></div></div>
+                            <small>${attRate}%</small>
+                        </td>
+                        <td>${totalDays}</td>
+                        <td style="color:green">${present}</td>
+                        <td style="color:red">${absent}</td>
+                        <td>${lateMin}</td>
+                        <td>${baseSalary}</td>
+                        <td style="color:red">-${totalDeduction.toFixed(0)}</td>
+                        <td style="font-weight:bold; color:blue;">${finalSalary.toFixed(0)} AFN</td>
+                        <td class="no-print">
+                            <button class="pay-btn" onclick="processPayment('${tDoc.id}', ${finalSalary})">تادیه ✅</button>
+                        </td>
+                    </tr>`;
+            });
+        } catch (e) { console.error(e); }
+    }
+
+    async function processPayment(id, amount) {
+        if(confirm(`ایا ډاډه یاست چې د ${amount.toFixed(0)} افغانیو معاش تادیه ثبت کړئ؟`)) {
+            await db.collection("babaFinance").add({
+                name: "د ښوونکي معاش",
+                type: "expense",
+                amount: amount,
+                teacherId: id,
+                date: new Date().toLocaleDateString('fa-AF'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("معاش په بریالیتوب سره په مالي سیستم کې ثبت شو!");
+        }
+    }
+
+    function exportToExcel() {
+        let table = document.getElementById("reportTable");
+        let html = table.outerHTML;
+        window.open('data:application/vnd.ms-excel,' + encodeURIComponent(html));
+    }
+
+    window.onload = generateReport;
+</script>
+</body>
+</html>
